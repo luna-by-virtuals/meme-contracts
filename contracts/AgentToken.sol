@@ -9,6 +9,7 @@ import "./pool/IUniswapV2Factory.sol";
 import "./pool/IUniswapV2Pair.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./IAgentToken.sol";
+import "./ITaxManager.sol";
 
 contract AgentToken is Context, IAgentToken, Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -883,10 +884,15 @@ contract AgentToken is Context, IAgentToken, Ownable {
                     swapBalance_,
                     0,
                     path,
-                    projectTaxRecipient,
+                    address(this),
                     block.timestamp + 600
                 )
         {
+            uint256 amountOut = IERC20(pairToken).balanceOf(address(this));
+            if(amountOut > 0){
+                IERC20(pairToken).safeTransfer(projectTaxRecipient, amountOut);
+                ITaxManager(projectTaxRecipient).recordTax(address(this), amountOut);
+            }
             // We will not have swapped all tax tokens IF the amount was greater than the max auto swap.
             // We therefore cannot just set the pending swap counters to 0. Instead, in this scenario,
             // we must reduce them in proportion to the swap amount vs the remaining balance + swap

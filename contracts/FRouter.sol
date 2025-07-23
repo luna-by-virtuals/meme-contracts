@@ -9,6 +9,7 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 
 import "./FFactory.sol";
 import "./IFPair.sol";
+import "./ITaxManager.sol";
 
 contract FRouter is
     Initializable,
@@ -123,6 +124,7 @@ contract FRouter is
 
         pair.transferAsset(to, amount);
         pair.transferAsset(feeTo, txFee);
+        ITaxManager(feeTo).recordBondingTax(tokenAddress, txFee);
 
         pair.swap(amountIn, 0, 0, amountOut);
 
@@ -147,8 +149,8 @@ contract FRouter is
         uint256 amount = amountIn - txFee;
 
         IERC20(assetToken).safeTransferFrom(to, pair, amount);
-
         IERC20(assetToken).safeTransferFrom(to, feeTo, txFee);
+        ITaxManager(feeTo).recordBondingTax(tokenAddress, txFee);
 
         uint256 amountOut = getAmountsOut(tokenAddress, assetToken, amount);
 
@@ -168,6 +170,7 @@ contract FRouter is
         uint256 tokenBalance = IFPair(pair).balance();
         FPair(pair).transferAsset(tokenAddress, assetBalance);
         FPair(pair).transferTo(tokenAddress, tokenBalance);
+        ITaxManager(factory.taxVault()).graduate(tokenAddress);
     }
 
     function approval(

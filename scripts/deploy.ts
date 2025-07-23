@@ -6,11 +6,26 @@ const adminSigner = new ethers.Wallet(
   ethers.provider
 );
 
+const deployerSigner = new ethers.Wallet(
+  process.env.PRIVATE_KEY,
+  ethers.provider
+);
+
 (async () => {
   try {
+    const taxManager = await upgrades.deployProxy(
+      await ethers.getContractFactory("TaxManager"),
+      [process.env.ADMIN, process.env.WETH, process.env.ADMIN],
+      {
+        initialOwner: process.env.CONTRACT_CONTROLLER,
+      }
+    );
+    await taxManager.waitForDeployment();
+    console.log("TaxManager deployed to:", taxManager.target);
+
     const fFactory = await upgrades.deployProxy(
       await ethers.getContractFactory("FFactory"),
-      [process.env.BONDING_TAX, process.env.BONDING_TAX],
+      [taxManager.target, process.env.BONDING_TAX, process.env.BONDING_TAX],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER,
       }
@@ -28,7 +43,7 @@ const adminSigner = new ethers.Wallet(
     );
     await fRouter.waitForDeployment();
     console.log("FRouter deployed to:", fRouter.target);
-    await fFactory.setRouter(fRouter.target);
+    await fFactory.connect(deployerSigner).setRouter(fRouter.target);
 
     const launchpad = await upgrades.deployProxy(
       await ethers.getContractFactory("Launchpad"),
@@ -64,7 +79,7 @@ const adminSigner = new ethers.Wallet(
         process.env.TAX,
         process.env.TAX,
         process.env.SWAP_THRESHOLD,
-        process.env.TREASURY,
+        taxManager.target,
       ]
     );
 
@@ -74,8 +89,8 @@ const adminSigner = new ethers.Wallet(
       supplyParams,
       taxParams,
     ]);
-    await fFactory.grantRole(await fFactory.CREATOR_ROLE(), launchpad.target);
-    await fRouter.grantRole(await fRouter.EXECUTOR_ROLE(), launchpad.target);
+    await fFactory.connect(deployerSigner).grantRole(await fFactory.CREATOR_ROLE(), launchpad.target);
+    await fRouter.connect(deployerSigner).grantRole(await fRouter.EXECUTOR_ROLE(), launchpad.target);
   } catch (e) {
     console.log(e);
   }

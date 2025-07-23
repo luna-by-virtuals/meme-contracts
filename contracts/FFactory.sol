@@ -22,6 +22,7 @@ contract FFactory is
 
     address public router;
 
+    address public taxVault;
     uint256 public buyTax;
     uint256 public sellTax;
 
@@ -38,6 +39,7 @@ contract FFactory is
     }
 
     function initialize(
+        address taxVault_,
         uint256 buyTax_,
         uint256 sellTax_
     ) external initializer {
@@ -45,6 +47,7 @@ contract FFactory is
         __ReentrancyGuard_init();
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
 
+        taxVault = taxVault_;
         buyTax = buyTax_;
         sellTax = sellTax_;
     }
@@ -92,11 +95,13 @@ contract FFactory is
     }
 
     function setTaxParams(
+        address taxVault_,
         uint256 buyTax_,
         uint256 sellTax_
     ) public onlyRole(ADMIN_ROLE) {
         buyTax = buyTax_;
         sellTax = sellTax_;
+        taxVault = taxVault_;
     }
 
     function setRouter(address router_) public onlyRole(ADMIN_ROLE) {
@@ -127,10 +132,5 @@ contract FFactory is
 
     function graduate(address tokenAddress) external onlyRole(CREATOR_ROLE) {
         AgentToken(tokenAddress).addInitialLiquidity(address(this));
-    }
-
-    // temporary placeholder, to be removed when tax ledger is ready
-    function taxVault() external view returns (address) {
-        return address(this);
     }
 }
