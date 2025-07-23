@@ -29,8 +29,8 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     mapping(address token => uint256 amount) public leaderboardTaxes;
     mapping(address token => uint256 amount) public acpTaxes;
 
-    mapping(address token => address creator) private _creators;
-    mapping(address token => address acpWallet) private _acpWallets;
+    mapping(address token => address creator) public creators;
+    mapping(address token => address acpWallet) public acpWallets;
 
     event ReceivedTax(
         address indexed token,
@@ -130,18 +130,18 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     }
 
     function _getCreator(address token) internal returns (address) {
-        if (_creators[token] == address(0)) {
+        if (creators[token] == address(0)) {
             (address creator, , , , , , , , , , ) = launchpad.tokenInfo(token);
-            _creators[token] = creator;
+            creators[token] = creator;
         }
-        return _creators[token];
+        return creators[token];
     }
 
     function _getAcpWallet(address token) internal returns (address) {
-        if (_acpWallets[token] == address(0)) {
-            _acpWallets[token] = launchpad.acpWallets(token);
+        if (acpWallets[token] == address(0)) {
+            acpWallets[token] = launchpad.acpWallets(token);
         }
-        return _acpWallets[token];
+        return acpWallets[token];
     }
 
     function recordBondingTax(
@@ -236,10 +236,10 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     function setCreator(address token, address creator) external onlyOwner {
         require(token != address(0), "Zero addresses are not allowed.");
         require(creator != address(0), "Zero addresses are not allowed.");
-        address oldCreator = _creators[token];
+        address oldCreator = creators[token];
         uint256 oldBalance = taxes[oldCreator];
 
-        _creators[token] = creator;
+        creators[token] = creator;
         taxes[oldCreator] = 0;
         taxes[creator] += oldBalance;
         emit CreatorSet(token, creator);
@@ -249,7 +249,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         require(token != address(0), "Zero addresses are not allowed.");
         require(acpWallet != address(0), "Zero addresses are not allowed.");
 
-        _acpWallets[token] = acpWallet;
+        acpWallets[token] = acpWallet;
         emit AcpWalletSet(token, acpWallet);
     }
 }

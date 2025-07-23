@@ -22,9 +22,9 @@ contract FFactory is
 
     address public router;
 
-    address public taxVault;
     uint256 public buyTax;
     uint256 public sellTax;
+    address public taxVault;
 
     event PairCreated(
         address indexed tokenA,

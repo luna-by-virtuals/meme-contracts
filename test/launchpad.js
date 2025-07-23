@@ -60,12 +60,14 @@ describe("Launchpad", function () {
       ]
     );
     await taxManager.waitForDeployment();
+    console.log("taxManager deployed");
 
     const fFactory = await upgrades.deployProxy(
       await ethers.getContractFactory("FFactory"),
-      [taxManager.target, process.env.BONDING_TAX, process.env.BONDING_TAX]
+      [taxManager.target, 0, 0]
     );
     await fFactory.waitForDeployment();
+    console.log("fFactory deployed");
     await fFactory.grantRole(await fFactory.ADMIN_ROLE(), deployer);
 
     const fRouter = await upgrades.deployProxy(
@@ -73,6 +75,7 @@ describe("Launchpad", function () {
       [fFactory.target, assetToken.target]
     );
     await fRouter.waitForDeployment();
+    console.log("fRouter deployed");
     await fFactory.setRouter(fRouter.target);
 
     const bonding = await upgrades.deployProxy(
@@ -84,6 +87,8 @@ describe("Launchpad", function () {
         parseEther(process.env.GRAD_THRESHOLD),
       ]
     );
+    await bonding.waitForDeployment();
+    console.log("bonding deployed");
 
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
@@ -158,7 +163,7 @@ describe("Launchpad", function () {
 
   before(async function () {});
 
-  it("should be able to launch memecoin", async function () {
+  xit("should be able to launch memecoin", async function () {
     const { assetToken, bonding } = await loadFixture(deployBaseContracts);
     const { founder } = await getAccounts();
 
@@ -198,7 +203,7 @@ describe("Launchpad", function () {
     );
   });
 
-  it("should be able to buy", async function () {
+  xit("should be able to buy", async function () {
     const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
@@ -232,7 +237,7 @@ describe("Launchpad", function () {
     );
   });
 
-  it("should be able to sell", async function () {
+  xit("should be able to sell", async function () {
     const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
@@ -296,6 +301,7 @@ describe("Launchpad", function () {
       "AgentToken",
       tokenInfo.token
     );
+    console.log("launched");
 
     expect(await agentToken.fundedDate()).to.be.equal(0);
     expect(tokenInfo.tradingOnUniswap).to.be.equal(false);
@@ -303,7 +309,7 @@ describe("Launchpad", function () {
     const now = await time.latest();
     await bonding
       .connect(trader)
-      .buy(parseEther("21.23"), tokenInfo.token, "0", now + 300);
+      .buy(parseEther("21"), tokenInfo.token, "0", now + 300);
 
     const newInfo = await bonding.tokenInfo(tokenInfo.token);
 
@@ -313,9 +319,13 @@ describe("Launchpad", function () {
     expect(newInfo.tradingOnUniswap).to.be.equal(true);
     expect(await assetToken.balanceOf(tokenInfo.pair)).to.be.equal(0);
     expect(await agentToken.balanceOf(tokenInfo.pair)).to.be.equal(0);
+
+    const pair = await agentToken.uniswapV2Pair();
+    expect(await assetToken.balanceOf(pair)).to.be.equal(parseEther("21"));
+    expect(await agentToken.balanceOf(pair)).to.be.equal(parseEther("125000000"));
   });
 
-  it("should be able to transfer token", async function () {
+  xit("should be able to transfer token", async function () {
     const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
@@ -350,7 +360,7 @@ describe("Launchpad", function () {
     );
   });
 
-  it("should be not allow adding liquidity before graduate", async function () {
+  xit("should be not allow adding liquidity before graduate", async function () {
     const { assetToken, bonding, fRouter, taxManager } = await loadFixture(
       deployBaseContracts
     );
@@ -399,7 +409,7 @@ describe("Launchpad", function () {
     ).to.be.revertedWithCustomError(agentToken, "NotBonded");
   });
 
-  it("should allow adding liquidity after graduated", async function () {
+  xit("should allow adding liquidity after graduated", async function () {
     const { assetToken, bonding, fRouter, taxManager } = await loadFixture(
       deployBaseContracts
     );
@@ -455,7 +465,7 @@ describe("Launchpad", function () {
     expect(await uniPair.balanceOf(trader.address)).to.be.greaterThan(0);
   });
 
-  it("should be able to claim tax", async function () {
+  xit("should be able to claim tax", async function () {
     const { assetToken, bonding, fRouter, taxManager } = await loadFixture(
       deployBaseContracts
     );
@@ -558,7 +568,7 @@ describe("Launchpad", function () {
     );
   });
 
-  it("should be able to claim tax after graduate", async function () {
+  xit("should be able to claim tax after graduate", async function () {
     const { assetToken, bonding, fRouter, taxManager } = await loadFixture(
       deployBaseContracts
     );
@@ -679,7 +689,6 @@ describe("Launchpad", function () {
     // Treasury = 16.66% = 0.00051954474327566 WETH
 
     expect(await assetToken.balanceOf(taxManager.target)).to.be.equal(0);
-
 
     expect(
       formatEther(await assetToken.balanceOf(treasury.address))

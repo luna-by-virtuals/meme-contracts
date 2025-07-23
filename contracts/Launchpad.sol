@@ -22,7 +22,7 @@ contract Launchpad is
     FFactory public factory;
     FRouter public router;
     uint256 public initialSupply;
-    uint256 public constant K = 2_625_000_000;
+    uint256 public constant K = 3_000_000_000;
     uint256 public gradThreshold;
     struct DeployParams {
         address tokenAdmin;
