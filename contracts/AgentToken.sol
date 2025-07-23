@@ -111,9 +111,7 @@ contract AgentToken is Context, IAgentToken, Ownable {
      *
      * @param encodedBaseParams_ The base params encoded into a bytes array
      */
-    function _decodeBaseParams(
-        bytes memory encodedBaseParams_
-    ) internal {
+    function _decodeBaseParams(bytes memory encodedBaseParams_) internal {
         (_name, _symbol) = abi.decode(encodedBaseParams_, (string, string));
     }
 
@@ -832,6 +830,7 @@ contract AgentToken is Context, IAgentToken, Ownable {
                         swapThresholdInTokens *
                         MAX_SWAP_THRESHOLD_MULTIPLE;
                 }
+
                 // Perform the auto swap to pair token
                 _swapTax(swapBalance, contractBalance);
                 // Flag that the autoswap is complete:
@@ -877,6 +876,9 @@ contract AgentToken is Context, IAgentToken, Ownable {
         path[0] = address(this);
         path[1] = pairToken;
 
+        uint256 balanceBefore = IERC20(pairToken).balanceOf(
+            projectTaxRecipient
+        );
         // Wrap external calls in try / catch to handle errors
         try
             _uniswapRouter
@@ -884,14 +886,19 @@ contract AgentToken is Context, IAgentToken, Ownable {
                     swapBalance_,
                     0,
                     path,
-                    address(this),
+                    projectTaxRecipient,
                     block.timestamp + 600
                 )
         {
-            uint256 amountOut = IERC20(pairToken).balanceOf(address(this));
-            if(amountOut > 0){
-                IERC20(pairToken).safeTransfer(projectTaxRecipient, amountOut);
-                ITaxManager(projectTaxRecipient).recordTax(address(this), amountOut);
+            uint256 balanceAfter = IERC20(pairToken).balanceOf(
+                projectTaxRecipient
+            );
+            uint256 amountOut = balanceAfter - balanceBefore;
+            if (amountOut > 0) {
+                ITaxManager(projectTaxRecipient).recordTax(
+                    address(this),
+                    amountOut
+                );
             }
             // We will not have swapped all tax tokens IF the amount was greater than the max auto swap.
             // We therefore cannot just set the pending swap counters to 0. Instead, in this scenario,
@@ -1128,7 +1135,7 @@ contract AgentToken is Context, IAgentToken, Ownable {
         address to,
         uint256 amount
     ) internal virtual {
-        if(to == uniswapV2Pair && fundedDate == 0) {
+        if (to == uniswapV2Pair && fundedDate == 0) {
             revert NotBonded();
         }
     }
