@@ -90,7 +90,10 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     ) public initializer {
         require(owner != address(0), "Zero addresses are not allowed.");
         require(assetToken_ != address(0), "Zero addresses are not allowed.");
-        require(leaderboardVault_ != address(0), "Zero addresses are not allowed.");
+        require(
+            leaderboardVault_ != address(0),
+            "Zero addresses are not allowed."
+        );
         require(treasury_ != address(0), "Zero addresses are not allowed.");
 
         __Ownable_init(owner);
@@ -156,8 +159,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         TaxConfig memory config = isBonding ? bondingTaxConfig : taxConfig;
 
         uint256 creatorShare = (amount * config.creatorShare) / DENOM;
-        uint256 leaderboardShare = (amount *
-            config.leaderboardShare) / DENOM;
+        uint256 leaderboardShare = (amount * config.leaderboardShare) / DENOM;
         uint256 acpShare = (amount * config.acpShare) / DENOM;
         uint256 treasuryShare = amount -
             creatorShare -
@@ -234,13 +236,19 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     function setCreator(address token, address creator) external onlyOwner {
         require(token != address(0), "Zero addresses are not allowed.");
         require(creator != address(0), "Zero addresses are not allowed.");
+        address oldCreator = _creators[token];
+        uint256 oldBalance = taxes[oldCreator];
+
         _creators[token] = creator;
+        taxes[oldCreator] = 0;
+        taxes[creator] += oldBalance;
         emit CreatorSet(token, creator);
     }
 
     function setAcpWallet(address token, address acpWallet) external onlyOwner {
         require(token != address(0), "Zero addresses are not allowed.");
         require(acpWallet != address(0), "Zero addresses are not allowed.");
+
         _acpWallets[token] = acpWallet;
         emit AcpWalletSet(token, acpWallet);
     }

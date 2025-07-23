@@ -182,28 +182,6 @@ interface IAgentToken is
     function totalSellTaxBasisPoints() external view returns (uint256);
 
     /**
-     * @dev distributeTaxTokens
-     *
-     * Allows the distribution of tax tokens to the designated recipient(s)
-     *
-     * As part of standard processing the tax token balance being above the threshold
-     * will trigger an autoswap to ETH and distribution of this ETH to the designated
-     * recipients. This is automatic and there is no need for user involvement.
-     *
-     * As part of this swap there are a number of calculations performed, particularly
-     * if the tax balance is above MAX_SWAP_THRESHOLD_MULTIPLE.
-     *
-     * Testing indicates that these calculations are safe. But given the data / code
-     * interactions it remains possible that some edge case set of scenarios may cause
-     * an issue with these calculations.
-     *
-     * This method is therefore provided as a 'fallback' option to safely distribute
-     * accumulated taxes from the contract, with a direct transfer of the ERC20 tokens
-     * themselves.
-     */
-    function distributeTaxTokens() external;
-
-    /**
      * @dev function {withdrawETH} onlyOwner
      *
      * A withdraw function to allow ETH to be withdrawn by the manager

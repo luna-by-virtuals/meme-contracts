@@ -16,7 +16,7 @@ contract AgentToken is Context, IAgentToken, Ownable {
     using EnumerableSet for EnumerableSet.Bytes32Set;
     using SafeERC20 for IERC20;
 
-    uint256 internal constant BP_DENOM = 10000;
+    uint256 internal constant BP_DENOM = 1000000;
     uint256 internal constant ROUND_DEC = 100000000000;
     uint256 internal constant CALL_GAS_LIMIT = 50000;
     uint256 internal constant MAX_SWAP_THRESHOLD_MULTIPLE = 20;
@@ -919,39 +919,6 @@ contract AgentToken is Context, IAgentToken, Ownable {
             // Dont allow a failed external call (in this case to uniswap) to stop a transfer.
             // Emit that this has occured and continue.
             emit ExternalCallError(5);
-        }
-    }
-
-    /**
-     * @dev distributeTaxTokens
-     *
-     * Allows the distribution of tax tokens to the designated recipient(s)
-     *
-     * As part of standard processing the tax token balance being above the threshold
-     * will trigger an autoswap to ETH and distribution of this ETH to the designated
-     * recipients. This is automatic and there is no need for user involvement.
-     *
-     * As part of this swap there are a number of calculations performed, particularly
-     * if the tax balance is above MAX_SWAP_THRESHOLD_MULTIPLE.
-     *
-     * Testing indicates that these calculations are safe. But given the data / code
-     * interactions it remains possible that some edge case set of scenarios may cause
-     * an issue with these calculations.
-     *
-     * This method is therefore provided as a 'fallback' option to safely distribute
-     * accumulated taxes from the contract, with a direct transfer of the ERC20 tokens
-     * themselves.
-     */
-    function distributeTaxTokens() external {
-        if (projectTaxPendingSwap > 0) {
-            uint256 projectDistribution = projectTaxPendingSwap;
-            projectTaxPendingSwap = 0;
-            _transfer(
-                address(this),
-                projectTaxRecipient,
-                projectDistribution,
-                false
-            );
         }
     }
 
