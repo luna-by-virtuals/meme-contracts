@@ -131,6 +131,6 @@ contract FFactory is
     }
 
     function graduate(address tokenAddress) external onlyRole(CREATOR_ROLE) {
-        AgentToken(tokenAddress).addInitialLiquidity(address(this));
+        AgentToken(tokenAddress).addInitialLiquidity(address(0));
     }
 }
