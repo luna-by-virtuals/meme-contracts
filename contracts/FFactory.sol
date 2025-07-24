@@ -122,7 +122,7 @@ contract FFactory is
             salt: keccak256(abi.encodePacked(msg.sender, block.timestamp, salt))
         }(
             [tokenAdmin, uniswapRouter, assetToken],
-            abi.encode(string.concat("fun ", name), ticker),
+            abi.encode(name, ticker),
             tokenSupplyParams,
             tokenTaxParams
         );
