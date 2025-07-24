@@ -1244,7 +1244,7 @@
             "label": "launchpad",
             "offset": 0,
             "slot": "2",
-            "type": "t_contract(Launchpad)7276",
+            "type": "t_contract(Launchpad)7271",
             "contract": "TaxManager",
             "src": "contracts/TaxManager.sol:22"
           },
@@ -1316,7 +1316,7 @@
             "label": "bondingTaxConfig",
             "offset": 0,
             "slot": "11",
-            "type": "t_struct(TaxConfig)7301_storage",
+            "type": "t_struct(TaxConfig)7296_storage",
             "contract": "TaxManager",
             "src": "contracts/TaxManager.sol:67"
           },
@@ -1324,7 +1324,7 @@
             "label": "taxConfig",
             "offset": 0,
             "slot": "14",
-            "type": "t_struct(TaxConfig)7301_storage",
+            "type": "t_struct(TaxConfig)7296_storage",
             "contract": "TaxManager",
             "src": "contracts/TaxManager.sol:68"
           }
@@ -1372,7 +1372,7 @@
             "label": "uint64",
             "numberOfBytes": "8"
           },
-          "t_contract(Launchpad)7276": {
+          "t_contract(Launchpad)7271": {
             "label": "contract Launchpad",
             "numberOfBytes": "20"
           },
@@ -1384,7 +1384,7 @@
             "label": "mapping(address => uint256)",
             "numberOfBytes": "32"
           },
-          "t_struct(TaxConfig)7301_storage": {
+          "t_struct(TaxConfig)7296_storage": {
             "label": "struct TaxManager.TaxConfig",
             "members": [
               {
@@ -2632,6 +2632,432 @@
               "label": "_status",
               "type": "t_uint256",
               "src": "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol:40",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "8cb8bd1ce7faa50424371464d0caf6e7daafb0a5f4297d3f8e0503f8cfae2167": {
+      "address": "0x2518625C511591963854ACbd8C818221d958a111",
+      "txHash": "0x69a17ac478b324eaabe7c77e1f8cab5d6e9656984ba0c9c5ba8af336b4fc48d6",
+      "layout": {
+        "solcVersion": "0.8.26",
+        "storage": [
+          {
+            "label": "_pair",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_address))",
+            "contract": "FFactory",
+            "src": "contracts/FFactory.sol:19"
+          },
+          {
+            "label": "pairs",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "FFactory",
+            "src": "contracts/FFactory.sol:21"
+          },
+          {
+            "label": "router",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address",
+            "contract": "FFactory",
+            "src": "contracts/FFactory.sol:23"
+          },
+          {
+            "label": "buyTax",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256",
+            "contract": "FFactory",
+            "src": "contracts/FFactory.sol:25"
+          },
+          {
+            "label": "sellTax",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256",
+            "contract": "FFactory",
+            "src": "contracts/FFactory.sol:26"
+          },
+          {
+            "label": "taxVault",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "FFactory",
+            "src": "contracts/FFactory.sol:27"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)25_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AccessControlStorage)34_storage": {
+            "label": "struct AccessControlUpgradeable.AccessControlStorage",
+            "members": [
+              {
+                "label": "_roles",
+                "type": "t_mapping(t_bytes32,t_struct(RoleData)25_storage)",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(InitializableStorage)147_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)219_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)25_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "hasRole",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_address))": {
+            "label": "mapping(address => mapping(address => address))",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol:40",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.AccessControl": [
+            {
+              "contract": "AccessControlUpgradeable",
+              "label": "_roles",
+              "type": "t_mapping(t_bytes32,t_struct(RoleData)25_storage)",
+              "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:61",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "df86fbc74de48433dff4143237afd7c4ca85fa5fba7c4060a6a84e19e38c91ce": {
+      "address": "0xbB719bA6DB17b7495da7B095610e746C94ddf279",
+      "txHash": "0xa21c98237971fc16df2de8fdbf838dedc8529cfe979fd5490f97ca79d30faeac",
+      "layout": {
+        "solcVersion": "0.8.26",
+        "storage": [
+          {
+            "label": "assetToken",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:20"
+          },
+          {
+            "label": "bondingReward",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:21"
+          },
+          {
+            "label": "launchpad",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_contract(Launchpad)7271",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:22"
+          },
+          {
+            "label": "launchpadRouter",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:23"
+          },
+          {
+            "label": "treasury",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:24"
+          },
+          {
+            "label": "leaderboardVault",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:25"
+          },
+          {
+            "label": "taxes",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:27"
+          },
+          {
+            "label": "leaderboardTaxes",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:29"
+          },
+          {
+            "label": "acpTaxes",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:30"
+          },
+          {
+            "label": "creators",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:32"
+          },
+          {
+            "label": "acpWallets",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:33"
+          },
+          {
+            "label": "bondingTaxConfig",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_struct(TaxConfig)7296_storage",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:67"
+          },
+          {
+            "label": "taxConfig",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_struct(TaxConfig)7296_storage",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:68"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)147_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)97_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_contract(Launchpad)7271": {
+            "label": "contract Launchpad",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(TaxConfig)7296_storage": {
+            "label": "struct TaxManager.TaxConfig",
+            "members": [
+              {
+                "label": "creatorShare",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "leaderboardShare",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "acpShare",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
               "offset": 0,
               "slot": "0"
             }

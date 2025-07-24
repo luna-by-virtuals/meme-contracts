@@ -86,7 +86,8 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         address owner,
         address assetToken_,
         address leaderboardVault_,
-        address treasury_
+        address treasury_,
+        uint256 bondingReward_
     ) public initializer {
         require(owner != address(0), "Zero addresses are not allowed.");
         require(assetToken_ != address(0), "Zero addresses are not allowed.");
@@ -100,6 +101,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         assetToken = assetToken_;
         leaderboardVault = leaderboardVault_;
         treasury = treasury_;
+        bondingReward = bondingReward_;
     }
 
     function setLaunchpad(address launchpad_) external onlyOwner {
@@ -149,6 +151,10 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         uint256 amount
     ) external onlyLaunchpadRouter {
         _distributeTaxes(token, amount, true);
+    }
+
+    function setBondingReward(uint256 bondingReward_) external onlyOwner {
+        bondingReward = bondingReward_;
     }
 
     function _distributeTaxes(
