@@ -117,7 +117,7 @@ contract FRouter is
         token.safeTransferFrom(to, pairAddress, amountIn);
 
         uint fee = factory.sellTax();
-        uint256 txFee = (fee * amountOut) / 100;
+        uint256 txFee = (fee * amountOut) / 10000;
 
         uint256 amount = amountOut - txFee;
         address feeTo = factory.taxVault();
