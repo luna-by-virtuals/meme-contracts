@@ -217,7 +217,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         emit ClaimedTax(msg.sender, amount);
     }
 
-    function claimLeaderboardTax(address token, uint256 amount) external {
+    function claimLeaderboardTax(address token, uint256 amount, address recipient) external {
         uint256 claimable = leaderboardTaxes[token];
         require(claimable >= amount, "Insufficient tax to claim.");
         require(
@@ -225,11 +225,11 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
             "Only leaderboard vault can claim leaderboard tax."
         );
         leaderboardTaxes[token] -= amount;
-        IERC20(assetToken).safeTransfer(msg.sender, amount);
-        emit ClaimedTax(msg.sender, amount);
+        IERC20(assetToken).safeTransfer(recipient, amount);
+        emit ClaimedTaxLeaderboard(token, recipient, amount);
     }
 
-    function claimAcpTax(address token, uint256 amount) external {
+    function claimAcpTax(address token, uint256 amount, address recipient) external {
         uint256 claimable = acpTaxes[token];
         require(claimable >= amount, "Insufficient tax to claim.");
         require(
@@ -237,8 +237,8 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
             "Only acp wallet can claim acp tax."
         );
         acpTaxes[token] -= amount;
-        IERC20(assetToken).safeTransfer(msg.sender, amount);
-        emit ClaimedTaxAcp(token, msg.sender, amount);
+        IERC20(assetToken).safeTransfer(recipient, amount);
+        emit ClaimedTaxAcp(token, recipient, amount);
     }
 
     function setCreator(address token, address creator) external onlyOwner {
