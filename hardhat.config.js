@@ -26,7 +26,7 @@ module.exports = {
     apiKey: process.env.ETHERSCAN_API_KEY,
   },
   networks: {
-    base: {
+    eth: {
       url: "https://eth.drpc.org",
       accounts: [process.env.PRIVATE_KEY],
     },
