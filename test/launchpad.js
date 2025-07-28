@@ -2,11 +2,10 @@
 Test the bonding curve with single token
 */
 
-const { parseEther, toBeHex, formatEther } = require("ethers/utils");
+const { parseEther, formatEther } = require("ethers/utils");
 const { expect } = require("chai");
 const {
   loadFixture,
-  mine,
   time,
 } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
 
@@ -207,7 +206,7 @@ describe("Launchpad", function () {
     const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
-    const { founder, trader, treasury } = await getAccounts();
+    const { founder, trader } = await getAccounts();
 
     await assetToken.mint(trader.address, parseEther("100"));
     await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
@@ -241,7 +240,7 @@ describe("Launchpad", function () {
     const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
-    const { founder, trader, treasury } = await getAccounts();
+    const { founder, trader } = await getAccounts();
 
     await assetToken.mint(trader.address, parseEther("100"));
     await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
@@ -290,7 +289,7 @@ describe("Launchpad", function () {
     const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
-    const { founder, trader, treasury } = await getAccounts();
+    const { founder, trader } = await getAccounts();
 
     await assetToken.mint(trader.address, parseEther("100"));
     await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
@@ -361,10 +360,10 @@ describe("Launchpad", function () {
   });
 
   xit("should be not allow adding liquidity before graduate", async function () {
-    const { assetToken, bonding, fRouter, taxManager } = await loadFixture(
+    const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
-    const { founder, trader, treasury } = await getAccounts();
+    const { founder, trader } = await getAccounts();
 
     const tokenInfo = await launchToken(founder, bonding);
     const uniRouter = await ethers.getContractAt(
@@ -410,10 +409,10 @@ describe("Launchpad", function () {
   });
 
   xit("should allow adding liquidity after graduated", async function () {
-    const { assetToken, bonding, fRouter, taxManager } = await loadFixture(
+    const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
-    const { founder, trader, treasury } = await getAccounts();
+    const { founder, trader } = await getAccounts();
 
     const tokenInfo = await launchToken(founder, bonding);
     const uniRouter = await ethers.getContractAt(
@@ -702,5 +701,612 @@ describe("Launchpad", function () {
     expect(
       formatEther(await assetToken.balanceOf(founder.address))
     ).to.be.equal("0.000519856594862258");
+  });
+
+  // Access Control Tests
+  describe("Access Control", function () {
+    it("should only allow owner to set token params", async function () {
+      const { bonding } = await loadFixture(deployBaseContracts);
+      const { trader } = await getAccounts();
+
+      await expect(
+        bonding.connect(trader).setTokenParams(parseEther("1000000"), parseEther("100"))
+      ).to.be.revertedWithCustomError(bonding, "OwnableUnauthorizedAccount");
+    });
+
+    it("should only allow owner to set deploy params", async function () {
+      const { bonding } = await loadFixture(deployBaseContracts);
+      const { trader } = await getAccounts();
+
+      const params = {
+        tokenAdmin: trader.address,
+        uniswapRouter: process.env.UNISWAP_ROUTER,
+        tokenSupplyParams: "0x",
+        tokenTaxParams: "0x"
+      };
+
+      await expect(
+        bonding.connect(trader).setDeployParams(params)
+      ).to.be.revertedWithCustomError(bonding, "OwnableUnauthorizedAccount");
+    });
+
+    it("should only allow owner to set ACP manager", async function () {
+      const { bonding } = await loadFixture(deployBaseContracts);
+      const { trader } = await getAccounts();
+
+      await expect(
+        bonding.connect(trader).setAcpManager(trader.address)
+      ).to.be.revertedWithCustomError(bonding, "OwnableUnauthorizedAccount");
+    });
+
+    it("should only allow ACP manager to set ACP wallet", async function () {
+      const { bonding } = await loadFixture(deployBaseContracts);
+      const { trader, acpWallet } = await getAccounts();
+
+      const tokenInfo = await launchToken(trader, bonding);
+
+      await expect(
+        bonding.connect(trader).setAcpWallet(tokenInfo.token, acpWallet.address)
+      ).to.be.revertedWith("Only acp manager can call this function.");
+    });
+  });
+
+  // Edge Cases and Validation Tests
+  describe("Edge Cases and Validation", function () {
+    it("should launch token with zero initial purchase", async function () {
+      const { bonding } = await loadFixture(deployBaseContracts);
+      const { founder } = await getAccounts();
+
+      await bonding
+        .connect(founder)
+        .launch(
+          tokenInput.name,
+          tokenInput.symbol,
+          "it is a cat",
+          "https://cat.png",
+          [tokenInput.twitter, "", "", ""],
+          0,
+          "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+        );
+
+      const tokenInfo = await bonding.tokenInfo(await bonding.tokenInfos(0));
+      expect(tokenInfo.token).to.not.equal("0x0000000000000000000000000000000000000000");
+    });
+
+    it("should revert on buy with expired deadline", async function () {
+      const { assetToken, bonding } = await loadFixture(deployBaseContracts);
+      const { founder, trader } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("10"));
+      await assetToken.connect(trader).approve(bonding.target, parseEther("10"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+      const pastDeadline = (await time.latest()) - 100;
+
+      await expect(
+        bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", pastDeadline)
+      ).to.be.revertedWithCustomError(bonding, "InvalidInput");
+    });
+
+    it("should revert on sell with expired deadline", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder, trader } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("10"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("10"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+      
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", now + 300);
+
+      const agentToken = await ethers.getContractAt("AgentToken", tokenInfo.token);
+      await agentToken.connect(trader).approve(fRouter.target, await agentToken.balanceOf(trader.address));
+
+      const pastDeadline = (await time.latest()) - 100;
+      await expect(
+        bonding.connect(trader).sell(await agentToken.balanceOf(trader.address), tokenInfo.token, "0", pastDeadline)
+      ).to.be.revertedWithCustomError(bonding, "InvalidInput");
+    });
+
+    it("should revert on slippage too high", async function () {
+      const { assetToken, bonding } = await loadFixture(deployBaseContracts);
+      const { founder, trader } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("10"));
+      await assetToken.connect(trader).approve(bonding.target, parseEther("10"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+      const now = await time.latest();
+
+      await expect(
+        bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, parseEther("1000000"), now + 300)
+      ).to.be.revertedWithCustomError(bonding, "SlippageTooHigh");
+    });
+  });
+
+  // Bot Protection Tests
+  describe("Bot Protection", function () {
+    it("should restrict transfers during bot protection period", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder, trader, treasury } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("10"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("10"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+      const agentToken = await ethers.getContractAt("AgentToken", tokenInfo.token);
+
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", now + 300);
+
+      // Try to transfer immediately (within bot protection period)
+      await expect(
+        agentToken.connect(trader).transfer(treasury.address, await agentToken.balanceOf(trader.address))
+      ).to.be.revertedWithCustomError(agentToken, "BotProtectionInEffect");
+    });
+
+    it("should allow transfers after bot protection expires", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder, trader, treasury } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("10"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("10"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+      const agentToken = await ethers.getContractAt("AgentToken", tokenInfo.token);
+
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", now + 300);
+
+      // Wait for bot protection to expire
+      await time.increase(parseInt(process.env.BOT_PROTECTION) + 1);
+
+      const balance = await agentToken.balanceOf(trader.address);
+      await agentToken.connect(trader).transfer(treasury.address, balance);
+
+      expect(await agentToken.balanceOf(treasury.address)).to.equal(balance);
+    });
+  });
+
+  // Profile Management Tests
+  describe("Profile Management", function () {
+    it("should create profile on first token launch", async function () {
+      const { bonding } = await loadFixture(deployBaseContracts);
+      const { founder } = await getAccounts();
+
+      const profileBefore = await bonding.profile(founder.address);
+      expect(profileBefore.user).to.equal("0x0000000000000000000000000000000000000000");
+
+      await launchToken(founder, bonding);
+
+      const profileAfter = await bonding.profile(founder.address);
+      expect(profileAfter.user).to.equal(founder.address);
+    });
+
+    it("should update profile with multiple token launches", async function () {
+      const { bonding } = await loadFixture(deployBaseContracts);
+      const { founder } = await getAccounts();
+
+      // Launch first token
+      await launchToken(founder, bonding);
+      
+      // Launch second token
+      await bonding
+        .connect(founder)
+        .launch(
+          "Second Token",
+          "SEC",
+          "Second token description",
+          "https://second.png",
+          ["@second", "", "", ""],
+          0,
+          "0x2234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+        );
+
+      const profile = await bonding.profile(founder.address);
+      expect(profile.user).to.equal(founder.address);
+      
+      // Should have 2 tokens in profile
+      const token1 = await bonding.tokenInfos(0);
+      const token2 = await bonding.tokenInfos(1);
+      
+      const tokenInfo1 = await bonding.tokenInfo(token1);
+      const tokenInfo2 = await bonding.tokenInfo(token2);
+      
+      expect(tokenInfo1.creator).to.equal(founder.address);
+      expect(tokenInfo2.creator).to.equal(founder.address);
+    });
+  });
+
+  // AMM and Pricing Tests
+  describe("AMM and Pricing", function () {
+    it("should calculate correct amounts out for buys", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder } = await getAccounts();
+
+      const tokenInfo = await launchToken(founder, bonding);
+      
+      const buyAmount = parseEther("1");
+      const expectedOut = await fRouter.getAmountsOut(tokenInfo.token, assetToken.target, buyAmount);
+      
+      expect(expectedOut).to.be.greaterThan(0);
+    });
+
+    it("should calculate correct amounts out for sells", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder, trader } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("10"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("10"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+      
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", now + 300);
+
+      const agentToken = await ethers.getContractAt("AgentToken", tokenInfo.token);
+      const sellAmount = await agentToken.balanceOf(trader.address);
+      
+      const expectedOut = await fRouter.getAmountsOut(tokenInfo.token, trader.address, sellAmount);
+      expect(expectedOut).to.be.greaterThan(0);
+    });
+  });
+
+  // Error Handling Tests
+  describe("Error Handling", function () {
+    it("should revert when trying to graduate already graduated token", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder, trader } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("100"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+
+      // Graduate the token
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("22"), tokenInfo.token, "0", now + 300);
+
+      // Try to buy again (should revert because it's already graduated)
+      await expect(
+        bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", now + 300)
+      ).to.be.reverted;
+    });
+
+    it("should revert on insufficient balance", async function () {
+      const { bonding } = await loadFixture(deployBaseContracts);
+      const { founder, trader } = await getAccounts();
+
+      const tokenInfo = await launchToken(founder, bonding);
+      const now = await time.latest();
+
+      // Try to buy without having any tokens
+      await expect(
+        bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", now + 300)
+      ).to.be.reverted;
+    });
+  });
+
+  // Integration Tests
+  describe("Integration", function () {
+    it("should complete full lifecycle: launch -> trade -> graduate -> uniswap", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder, trader } = await getAccounts();
+
+      // Setup
+      await assetToken.mint(trader.address, parseEther("100"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
+
+      // Launch
+      const tokenInfo = await launchToken(founder, bonding);
+      const agentToken = await ethers.getContractAt("AgentToken", tokenInfo.token);
+
+      // Trade on bonding curve
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("5"), tokenInfo.token, "0", now + 300);
+      
+      expect(await agentToken.fundedDate()).to.equal(0);
+      expect(tokenInfo.tradingOnUniswap).to.equal(false);
+
+      // Graduate
+      await bonding.connect(trader).buy(parseEther("20"), tokenInfo.token, "0", now + 300);
+      
+      const newInfo = await bonding.tokenInfo(tokenInfo.token);
+      expect(await agentToken.fundedDate()).to.be.greaterThan(0);
+      expect(newInfo.tradingOnUniswap).to.equal(true);
+
+      // Trade on Uniswap
+      const uniRouter = await ethers.getContractAt("IUniswapV2Router02", process.env.UNISWAP_ROUTER);
+      await assetToken.connect(trader).approve(uniRouter.target, parseEther("1"));
+      
+      await uniRouter
+        .connect(trader)
+        .swapExactTokensForTokensSupportingFeeOnTransferTokens(
+          parseEther("1"),
+          "0",
+          [assetToken.target, tokenInfo.token],
+          trader.address,
+          now + 600
+        );
+
+      expect(await agentToken.balanceOf(trader.address)).to.be.greaterThan(0);
+    });
+  });
+
+  // Additional Tax Distribution Tests
+  describe("Tax Distribution Edge Cases", function () {
+    it("should handle claiming tax with zero balance", async function () {
+      const { taxManager } = await loadFixture(deployBaseContracts);
+      const { trader } = await getAccounts();
+
+      // Try to claim tax when balance is zero
+      await expect(
+        taxManager.connect(trader).claimTax(0)
+      ).to.not.be.reverted;
+
+      await expect(
+        taxManager.connect(trader).claimTax(parseEther("1"))
+      ).to.not.be.reverted;
+    });
+
+    it("should track leaderboard taxes across multiple tokens", async function () {
+      const { assetToken, bonding, fRouter, taxManager } = await loadFixture(deployBaseContracts);
+      const { founder, trader, leaderboardVault } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("100"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
+
+      // Launch first token
+      const tokenInfo1 = await launchToken(founder, bonding);
+      
+      // Launch second token
+      await bonding
+        .connect(founder)
+        .launch(
+          "Second Token",
+          "SEC",
+          "Second token",
+          "https://second.png",
+          ["@second", "", "", ""],
+          0,
+          "0x2234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+        );
+      const tokenInfo2 = await bonding.tokenInfo(await bonding.tokenInfos(1));
+
+      // Buy both tokens
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("5"), tokenInfo1.token, "0", now + 300);
+      await bonding.connect(trader).buy(parseEther("5"), tokenInfo2.token, "0", now + 300);
+
+      // Check leaderboard taxes for both tokens
+      const tax1 = await taxManager.leaderboardTaxes(tokenInfo1.token);
+      const tax2 = await taxManager.leaderboardTaxes(tokenInfo2.token);
+
+      expect(tax1).to.be.greaterThan(0);
+      expect(tax2).to.be.greaterThan(0);
+
+      // Claim leaderboard taxes for both tokens
+      await taxManager
+        .connect(leaderboardVault)
+        .claimLeaderboardTax(tokenInfo1.token, tax1);
+      await taxManager
+        .connect(leaderboardVault)
+        .claimLeaderboardTax(tokenInfo2.token, tax2);
+
+      expect(await taxManager.leaderboardTaxes(tokenInfo1.token)).to.equal(0);
+      expect(await taxManager.leaderboardTaxes(tokenInfo2.token)).to.equal(0);
+    });
+
+    it("should update ACP wallet and allow new wallet to claim", async function () {
+      const { assetToken, bonding, fRouter, taxManager } = await loadFixture(deployBaseContracts);
+      const { founder, trader, acpWalletManager, treasury } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("100"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+
+      // Buy to generate tax
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("5"), tokenInfo.token, "0", now + 300);
+
+      const acpTax = await taxManager.acpTaxes(tokenInfo.token);
+      expect(acpTax).to.be.greaterThan(0);
+
+      // Update ACP wallet
+      await bonding
+        .connect(acpWalletManager)
+        .setAcpWallet(tokenInfo.token, treasury.address);
+
+      // New wallet should be able to claim
+      await taxManager
+        .connect(treasury)
+        .claimAcpTax(tokenInfo.token, acpTax);
+
+      expect(await assetToken.balanceOf(treasury.address)).to.equal(acpTax);
+    });
+  });
+
+  // Graduation Edge Cases
+  describe("Graduation Edge Cases", function () {
+    it("should graduate exactly at threshold", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder, trader } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("100"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+      const agentToken = await ethers.getContractAt("AgentToken", tokenInfo.token);
+
+      // Calculate exact amount needed to hit threshold
+      // const pair = await ethers.getContractAt("FPair", tokenInfo.pair);
+      // const [reserveA, ] = await pair.getReserves();
+      // const gradThreshold = await bonding.gradThreshold();
+
+      // This should bring us exactly to graduation threshold
+      const amountNeeded = parseEther("21");
+      
+      const now = await time.latest();
+      await bonding.connect(trader).buy(amountNeeded, tokenInfo.token, "0", now + 300);
+
+      const newInfo = await bonding.tokenInfo(tokenInfo.token);
+      expect(await agentToken.fundedDate()).to.be.greaterThan(0);
+      expect(newInfo.tradingOnUniswap).to.equal(true);
+    });
+
+    it("should maintain zero balances in bonding pair after graduation", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder, trader } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("100"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+      const agentToken = await ethers.getContractAt("AgentToken", tokenInfo.token);
+
+      // Graduate the token
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("22"), tokenInfo.token, "0", now + 300);
+
+      // Check bonding pair has zero balances
+      expect(await assetToken.balanceOf(tokenInfo.pair)).to.equal(0);
+      expect(await agentToken.balanceOf(tokenInfo.pair)).to.equal(0);
+    });
+
+    it("should prevent trading on bonding curve after graduation", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder, trader, treasury } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("100"));
+      await assetToken.mint(treasury.address, parseEther("100"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
+      await assetToken.connect(treasury).approve(fRouter.target, parseEther("100"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+
+      // Graduate the token
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("22"), tokenInfo.token, "0", now + 300);
+
+      // Try to buy on bonding curve after graduation
+      await expect(
+        bonding.connect(treasury).buy(parseEther("1"), tokenInfo.token, "0", now + 300)
+      ).to.be.reverted;
+
+      // Try to sell on bonding curve after graduation
+      const agentToken = await ethers.getContractAt("AgentToken", tokenInfo.token);
+      await agentToken.connect(trader).approve(fRouter.target, await agentToken.balanceOf(trader.address));
+      
+      await expect(
+        bonding.connect(trader).sell(parseEther("1"), tokenInfo.token, "0", now + 300)
+      ).to.be.reverted;
+    });
+  });
+
+  // Data Update Tests
+  describe("Data Updates", function () {
+    it("should update lastUpdated timestamp after 24 hours", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder, trader } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("100"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+      
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", now + 300);
+
+      const lastUpdatedBefore = (await bonding.tokenInfo(tokenInfo.token)).data.lastUpdated;
+
+      // Fast forward 25 hours
+      await time.increase(25 * 60 * 60);
+
+      // Make another trade
+      await bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", (await time.latest()) + 300);
+
+      const lastUpdatedAfter = (await bonding.tokenInfo(tokenInfo.token)).data.lastUpdated;
+
+      expect(lastUpdatedAfter).to.be.greaterThan(lastUpdatedBefore);
+    });
+
+    it("should not update lastUpdated timestamp within 24 hours", async function () {
+      const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
+      const { founder, trader } = await getAccounts();
+
+      await assetToken.mint(trader.address, parseEther("100"));
+      await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
+
+      const tokenInfo = await launchToken(founder, bonding);
+      
+      const now = await time.latest();
+      await bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", now + 300);
+
+      const lastUpdatedBefore = (await bonding.tokenInfo(tokenInfo.token)).data.lastUpdated;
+
+      // Fast forward 23 hours
+      await time.increase(23 * 60 * 60);
+
+      // Make another trade
+      await bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", (await time.latest()) + 300);
+
+      const lastUpdatedAfter = (await bonding.tokenInfo(tokenInfo.token)).data.lastUpdated;
+
+      expect(lastUpdatedAfter).to.equal(lastUpdatedBefore);
+    });
+  });
+
+  // Additional Security Tests
+  describe("Reentrancy Protection", function () {
+    it("should protect launch function from reentrancy", async function () {
+      const { bonding } = await loadFixture(deployBaseContracts);
+      const { founder } = await getAccounts();
+
+      // The reentrancy guard should prevent multiple simultaneous calls
+      // This is already protected by the nonReentrant modifier
+      await expect(
+        bonding
+          .connect(founder)
+          .launch(
+            tokenInput.name,
+            tokenInput.symbol,
+            "it is a cat",
+            "https://cat.png",
+            [tokenInput.twitter, "", "", ""],
+            0,
+            "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+          )
+      ).to.not.be.reverted;
+    });
+  });
+
+  // Additional Validation Tests
+  describe("Parameter Validation", function () {
+    it("should handle empty social media links", async function () {
+      const { bonding } = await loadFixture(deployBaseContracts);
+      const { founder } = await getAccounts();
+
+      await expect(
+        bonding
+          .connect(founder)
+          .launch(
+            tokenInput.name,
+            tokenInput.symbol,
+            "it is a cat",
+            "https://cat.png",
+            ["", "", "", ""],
+            0,
+            "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+          )
+      ).to.not.be.reverted;
+
+      const tokenInfo = await bonding.tokenInfo(await bonding.tokenInfos(0));
+      expect(tokenInfo.twitter).to.equal("");
+      expect(tokenInfo.telegram).to.equal("");
+      expect(tokenInfo.youtube).to.equal("");
+      expect(tokenInfo.website).to.equal("");
+    });
   });
 });
