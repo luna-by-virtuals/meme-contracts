@@ -20,3 +20,4 @@ deployments
 fireblocks_secret.key
 .cursor/
 test/dev
+CLAUDE.md

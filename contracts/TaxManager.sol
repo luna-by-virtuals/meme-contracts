@@ -195,6 +195,8 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
 
     function graduate(address token) external onlyLaunchpadRouter {
         address creator = _getCreator(token);
+        require(taxes[treasury] >= bondingReward, "Insufficient treasury balance for bonding reward");
+        
         taxes[creator] += bondingReward;
         taxes[treasury] -= bondingReward;
 
