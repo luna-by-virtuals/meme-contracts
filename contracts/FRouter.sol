@@ -50,12 +50,15 @@ contract FRouter is
         uint256 amountIn
     ) public view returns (uint256 _amountOut) {
         require(token != address(0), "Zero addresses are not allowed.");
+        require(amountIn > 0, "Amount in must be greater than 0");
 
         address pairAddress = factory.getPair(token, assetToken);
+        require(pairAddress != address(0), "Pair does not exist");
 
         IFPair pair = IFPair(pairAddress);
 
         (uint256 reserveA, uint256 reserveB) = pair.getReserves();
+        require(reserveA > 0 && reserveB > 0, "Insufficient liquidity");
 
         uint256 k = pair.kLast();
 

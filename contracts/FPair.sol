@@ -125,10 +125,12 @@ contract FPair is IFPair, ReentrancyGuard {
     }
 
     function priceALast() public view returns (uint256) {
+        require(_pool.reserve0 > 0, "Reserve is zero");
         return _pool.reserve1 / _pool.reserve0;
     }
 
     function priceBLast() public view returns (uint256) {
+        require(_pool.reserve1 > 0, "Reserve is zero");
         return _pool.reserve0 / _pool.reserve1;
     }
 
