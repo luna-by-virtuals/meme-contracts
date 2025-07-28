@@ -56,6 +56,7 @@ describe("Launchpad", function () {
         assetToken.target,
         leaderboardVault.address,
         treasury.address,
+        process.env.BONDING_REWARD,
       ]
     );
     await taxManager.waitForDeployment();
@@ -162,7 +163,7 @@ describe("Launchpad", function () {
 
   before(async function () {});
 
-  xit("should be able to launch memecoin", async function () {
+  it("should be able to launch memecoin", async function () {
     const { assetToken, bonding } = await loadFixture(deployBaseContracts);
     const { founder } = await getAccounts();
 
@@ -202,7 +203,7 @@ describe("Launchpad", function () {
     );
   });
 
-  xit("should be able to buy", async function () {
+  it("should be able to buy", async function () {
     const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
@@ -236,7 +237,7 @@ describe("Launchpad", function () {
     );
   });
 
-  xit("should be able to sell", async function () {
+  it("should be able to sell", async function () {
     const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
@@ -324,11 +325,11 @@ describe("Launchpad", function () {
     expect(await agentToken.balanceOf(pair)).to.be.equal(parseEther("125000000"));
   });
 
-  xit("should be able to transfer token", async function () {
+  it("should be able to transfer token", async function () {
     const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
-    const { founder, trader, treasury } = await getAccounts();
+    const { founder, trader } = await getAccounts();
 
     await assetToken.mint(trader.address, parseEther("100"));
     await assetToken.connect(trader).approve(fRouter.target, parseEther("100"));
@@ -359,7 +360,7 @@ describe("Launchpad", function () {
     );
   });
 
-  xit("should be not allow adding liquidity before graduate", async function () {
+  it("should be not allow adding liquidity before graduate", async function () {
     const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
@@ -408,7 +409,7 @@ describe("Launchpad", function () {
     ).to.be.revertedWithCustomError(agentToken, "NotBonded");
   });
 
-  xit("should allow adding liquidity after graduated", async function () {
+  it("should allow adding liquidity after graduated", async function () {
     const { assetToken, bonding, fRouter } = await loadFixture(
       deployBaseContracts
     );
@@ -464,7 +465,7 @@ describe("Launchpad", function () {
     expect(await uniPair.balanceOf(trader.address)).to.be.greaterThan(0);
   });
 
-  xit("should be able to claim tax", async function () {
+  it("should be able to claim tax", async function () {
     const { assetToken, bonding, fRouter, taxManager } = await loadFixture(
       deployBaseContracts
     );
@@ -567,7 +568,7 @@ describe("Launchpad", function () {
     );
   });
 
-  xit("should be able to claim tax after graduate", async function () {
+  it("should be able to claim tax after graduate", async function () {
     const { assetToken, bonding, fRouter, taxManager } = await loadFixture(
       deployBaseContracts
     );
@@ -825,28 +826,43 @@ describe("Launchpad", function () {
     });
   });
 
-  // Bot Protection Tests
-  describe("Bot Protection", function () {
-    it("should restrict transfers during bot protection period", async function () {
+  // Liquidity Protection Tests (NotBonded)
+  describe("Liquidity Protection", function () {
+    it("should prevent adding liquidity to Uniswap before graduation", async function () {
       const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
-      const { founder, trader, treasury } = await getAccounts();
+      const { founder, trader } = await getAccounts();
 
       await assetToken.mint(trader.address, parseEther("10"));
       await assetToken.connect(trader).approve(fRouter.target, parseEther("10"));
 
       const tokenInfo = await launchToken(founder, bonding);
       const agentToken = await ethers.getContractAt("AgentToken", tokenInfo.token);
+      
+      // Get Uniswap pair address
+      const uniRouter = await ethers.getContractAt(
+        "IUniswapV2Router02",
+        process.env.UNISWAP_ROUTER
+      );
+      const uniFactory = await ethers.getContractAt(
+        "IUniswapV2Factory",
+        await uniRouter.factory()
+      );
+      const pairAddr = await uniFactory.getPair(
+        tokenInfo.token,
+        assetToken.target
+      );
 
       const now = await time.latest();
       await bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", now + 300);
 
-      // Try to transfer immediately (within bot protection period)
+      // Try to transfer to Uniswap pair before graduation (should revert with NotBonded)
+      const balance = await agentToken.balanceOf(trader.address);
       await expect(
-        agentToken.connect(trader).transfer(treasury.address, await agentToken.balanceOf(trader.address))
-      ).to.be.revertedWithCustomError(agentToken, "BotProtectionInEffect");
+        agentToken.connect(trader).transfer(pairAddr, balance)
+      ).to.be.revertedWithCustomError(agentToken, "NotBonded");
     });
 
-    it("should allow transfers after bot protection expires", async function () {
+    it("should allow normal transfers between users before graduation", async function () {
       const { assetToken, bonding, fRouter } = await loadFixture(deployBaseContracts);
       const { founder, trader, treasury } = await getAccounts();
 
@@ -859,13 +875,12 @@ describe("Launchpad", function () {
       const now = await time.latest();
       await bonding.connect(trader).buy(parseEther("1"), tokenInfo.token, "0", now + 300);
 
-      // Wait for bot protection to expire
-      await time.increase(parseInt(process.env.BOT_PROTECTION) + 1);
-
+      // Normal transfers between users should work
       const balance = await agentToken.balanceOf(trader.address);
       await agentToken.connect(trader).transfer(treasury.address, balance);
 
       expect(await agentToken.balanceOf(treasury.address)).to.equal(balance);
+      expect(await agentToken.balanceOf(trader.address)).to.equal(0);
     });
   });
 
