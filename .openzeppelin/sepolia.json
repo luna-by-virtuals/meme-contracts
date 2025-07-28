@@ -3241,6 +3241,233 @@
           ]
         }
       }
+    },
+    "10257bef0fb77c4f66544963c1240d7a071e1d8ec5f44b603d206e8d7ee945f8": {
+      "address": "0xF416CDEe558659Fb80526f26e83cb33F709cD374",
+      "txHash": "0x7a6a028a6508a1119f27d4ebe125a1c1c813989b7eda82ae6b5aa29a95515563",
+      "layout": {
+        "solcVersion": "0.8.26",
+        "storage": [
+          {
+            "label": "assetToken",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:20"
+          },
+          {
+            "label": "bondingReward",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:21"
+          },
+          {
+            "label": "launchpad",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_contract(Launchpad)7360",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:22"
+          },
+          {
+            "label": "launchpadRouter",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_address",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:23"
+          },
+          {
+            "label": "treasury",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:24"
+          },
+          {
+            "label": "leaderboardVault",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_address",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:25"
+          },
+          {
+            "label": "taxes",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:27"
+          },
+          {
+            "label": "leaderboardTaxes",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:29"
+          },
+          {
+            "label": "acpTaxes",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:30"
+          },
+          {
+            "label": "creators",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:32"
+          },
+          {
+            "label": "acpWallets",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:33"
+          },
+          {
+            "label": "bondingTaxConfig",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_struct(TaxConfig)7385_storage",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:67"
+          },
+          {
+            "label": "taxConfig",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_struct(TaxConfig)7385_storage",
+            "contract": "TaxManager",
+            "src": "contracts/TaxManager.sol:68"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)211_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)151_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_contract(Launchpad)7360": {
+            "label": "contract Launchpad",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(TaxConfig)7385_storage": {
+            "label": "struct TaxManager.TaxConfig",
+            "members": [
+              {
+                "label": "creatorShare",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "leaderboardShare",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "acpShare",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
     }
   }
 }
