@@ -27,12 +27,21 @@ module.exports = {
   },
   networks: {
     eth: {
-      url: "https://eth.drpc.org",
+      url: process.env.RPC,
       accounts: [process.env.PRIVATE_KEY],
+    },
+    eth_fire: {
+      url: process.env.RPC,
+      accounts: [process.env.PRIVATE_KEY],
+      fireblocks: {
+        privateKey: process.env.FIREBLOCKS_API_PRIVATE_KEY_PATH,
+        apiKey: process.env.FIREBLOCKS_API_KEY,
+        vaultAccountIds: process.env.FIREBLOCKS_VAULT_ACCOUNT_IDS,
+      },
     },
     sepolia: {
       url: "https://sepolia.drpc.org",
-      accounts: [process.env.PRIVATE_KEY]
+      accounts: [process.env.PRIVATE_KEY],
     },
     local: {
       url: "http://127.0.0.1:8545",
