@@ -2240,7 +2240,7 @@
             "label": "factory",
             "offset": 0,
             "slot": "0",
-            "type": "t_contract(FFactory)5002",
+            "type": "t_contract(FFactory)4997",
             "contract": "Launchpad",
             "src": "contracts/Launchpad.sol:22"
           },
@@ -2248,7 +2248,7 @@
             "label": "router",
             "offset": 0,
             "slot": "1",
-            "type": "t_contract(FRouter)6043",
+            "type": "t_contract(FRouter)6038",
             "contract": "Launchpad",
             "src": "contracts/Launchpad.sol:23"
           },
@@ -2272,7 +2272,7 @@
             "label": "_deployParams",
             "offset": 0,
             "slot": "4",
-            "type": "t_struct(DeployParams)6461_storage",
+            "type": "t_struct(DeployParams)6456_storage",
             "contract": "Launchpad",
             "src": "contracts/Launchpad.sol:66"
           },
@@ -2280,7 +2280,7 @@
             "label": "profile",
             "offset": 0,
             "slot": "8",
-            "type": "t_mapping(t_address,t_struct(Profile)6467_storage)",
+            "type": "t_mapping(t_address,t_struct(Profile)6462_storage)",
             "contract": "Launchpad",
             "src": "contracts/Launchpad.sol:68"
           },
@@ -2296,7 +2296,7 @@
             "label": "tokenInfo",
             "offset": 0,
             "slot": "10",
-            "type": "t_mapping(t_address,t_struct(Token)6491_storage)",
+            "type": "t_mapping(t_address,t_struct(Token)6486_storage)",
             "contract": "Launchpad",
             "src": "contracts/Launchpad.sol:71"
           },
@@ -2392,11 +2392,11 @@
             "label": "bytes",
             "numberOfBytes": "32"
           },
-          "t_contract(FFactory)5002": {
+          "t_contract(FFactory)4997": {
             "label": "contract FFactory",
             "numberOfBytes": "20"
           },
-          "t_contract(FRouter)6043": {
+          "t_contract(FRouter)6038": {
             "label": "contract FRouter",
             "numberOfBytes": "20"
           },
@@ -2404,11 +2404,11 @@
             "label": "mapping(address => address)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_address,t_struct(Profile)6467_storage)": {
+          "t_mapping(t_address,t_struct(Profile)6462_storage)": {
             "label": "mapping(address => struct Launchpad.Profile)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_address,t_struct(Token)6491_storage)": {
+          "t_mapping(t_address,t_struct(Token)6486_storage)": {
             "label": "mapping(address => struct Launchpad.Token)",
             "numberOfBytes": "32"
           },
@@ -2416,7 +2416,7 @@
             "label": "string",
             "numberOfBytes": "32"
           },
-          "t_struct(Data)6516_storage": {
+          "t_struct(Data)6511_storage": {
             "label": "struct Launchpad.Data",
             "members": [
               {
@@ -2494,7 +2494,7 @@
             ],
             "numberOfBytes": "384"
           },
-          "t_struct(DeployParams)6461_storage": {
+          "t_struct(DeployParams)6456_storage": {
             "label": "struct Launchpad.DeployParams",
             "members": [
               {
@@ -2524,7 +2524,7 @@
             ],
             "numberOfBytes": "128"
           },
-          "t_struct(Profile)6467_storage": {
+          "t_struct(Profile)6462_storage": {
             "label": "struct Launchpad.Profile",
             "members": [
               {
@@ -2542,7 +2542,7 @@
             ],
             "numberOfBytes": "64"
           },
-          "t_struct(Token)6491_storage": {
+          "t_struct(Token)6486_storage": {
             "label": "struct Launchpad.Token",
             "members": [
               {
@@ -2565,7 +2565,7 @@
               },
               {
                 "label": "data",
-                "type": "t_struct(Data)6516_storage",
+                "type": "t_struct(Data)6511_storage",
                 "offset": 0,
                 "slot": "3"
               },
@@ -3444,6 +3444,433 @@
               "label": "_owner",
               "type": "t_address",
               "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "e56d7e3584c7026da6469479a616157c9f7de6241447a97f80c2a793326e8039": {
+      "address": "0x4708Fd0f147fbF7407AfBdA3901A6d006F1b74Fe",
+      "txHash": "0xfd6d14f05962402a38b27eafab6cefbe6ca6449a3a1ab58ed312405e3bded646",
+      "layout": {
+        "solcVersion": "0.8.26",
+        "storage": [
+          {
+            "label": "factory",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_contract(FFactory)4997",
+            "contract": "Launchpad",
+            "src": "contracts/Launchpad.sol:22"
+          },
+          {
+            "label": "router",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_contract(FRouter)6082",
+            "contract": "Launchpad",
+            "src": "contracts/Launchpad.sol:23"
+          },
+          {
+            "label": "initialSupply",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256",
+            "contract": "Launchpad",
+            "src": "contracts/Launchpad.sol:24"
+          },
+          {
+            "label": "gradThreshold",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256",
+            "contract": "Launchpad",
+            "src": "contracts/Launchpad.sol:26"
+          },
+          {
+            "label": "_deployParams",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_struct(DeployParams)6500_storage",
+            "contract": "Launchpad",
+            "src": "contracts/Launchpad.sol:66"
+          },
+          {
+            "label": "profile",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_mapping(t_address,t_struct(Profile)6506_storage)",
+            "contract": "Launchpad",
+            "src": "contracts/Launchpad.sol:68"
+          },
+          {
+            "label": "profiles",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "Launchpad",
+            "src": "contracts/Launchpad.sol:69"
+          },
+          {
+            "label": "tokenInfo",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_mapping(t_address,t_struct(Token)6530_storage)",
+            "contract": "Launchpad",
+            "src": "contracts/Launchpad.sol:71"
+          },
+          {
+            "label": "tokenInfos",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "Launchpad",
+            "src": "contracts/Launchpad.sol:72"
+          },
+          {
+            "label": "acpWallets",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_mapping(t_address,t_address)",
+            "contract": "Launchpad",
+            "src": "contracts/Launchpad.sol:73"
+          },
+          {
+            "label": "_acpManager",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_address",
+            "contract": "Launchpad",
+            "src": "contracts/Launchpad.sol:74"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)211_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)151_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(ReentrancyGuardStorage)296_storage": {
+            "label": "struct ReentrancyGuardUpgradeable.ReentrancyGuardStorage",
+            "members": [
+              {
+                "label": "_status",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_bytes_storage": {
+            "label": "bytes",
+            "numberOfBytes": "32"
+          },
+          "t_contract(FFactory)4997": {
+            "label": "contract FFactory",
+            "numberOfBytes": "20"
+          },
+          "t_contract(FRouter)6082": {
+            "label": "contract FRouter",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_address)": {
+            "label": "mapping(address => address)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(Profile)6506_storage)": {
+            "label": "mapping(address => struct Launchpad.Profile)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(Token)6530_storage)": {
+            "label": "mapping(address => struct Launchpad.Token)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Data)6555_storage": {
+            "label": "struct Launchpad.Data",
+            "members": [
+              {
+                "label": "token",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "_name",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "ticker",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "supply",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "marketCap",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "liquidity",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "volume",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "volume24H",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "9"
+              },
+              {
+                "label": "prevPrice",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "10"
+              },
+              {
+                "label": "lastUpdated",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "11"
+              }
+            ],
+            "numberOfBytes": "384"
+          },
+          "t_struct(DeployParams)6500_storage": {
+            "label": "struct Launchpad.DeployParams",
+            "members": [
+              {
+                "label": "tokenAdmin",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "uniswapRouter",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "tokenSupplyParams",
+                "type": "t_bytes_storage",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "tokenTaxParams",
+                "type": "t_bytes_storage",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_struct(Profile)6506_storage": {
+            "label": "struct Launchpad.Profile",
+            "members": [
+              {
+                "label": "user",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "tokens",
+                "type": "t_array(t_address)dyn_storage",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Token)6530_storage": {
+            "label": "struct Launchpad.Token",
+            "members": [
+              {
+                "label": "creator",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "token",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "pair",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "data",
+                "type": "t_struct(Data)6555_storage",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "description",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "15"
+              },
+              {
+                "label": "image",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "16"
+              },
+              {
+                "label": "twitter",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "17"
+              },
+              {
+                "label": "telegram",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "18"
+              },
+              {
+                "label": "youtube",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "19"
+              },
+              {
+                "label": "website",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "20"
+              },
+              {
+                "label": "tradingOnUniswap",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "21"
+              }
+            ],
+            "numberOfBytes": "704"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.ReentrancyGuard": [
+            {
+              "contract": "ReentrancyGuardUpgradeable",
+              "label": "_status",
+              "type": "t_uint256",
+              "src": "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol:40",
               "offset": 0,
               "slot": "0"
             }

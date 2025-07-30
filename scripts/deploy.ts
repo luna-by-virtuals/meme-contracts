@@ -91,6 +91,7 @@ const deployerSigner = new ethers.Wallet(
     ]);
     await fFactory.connect(deployerSigner).grantRole(await fFactory.CREATOR_ROLE(), launchpad.target);
     await fRouter.connect(deployerSigner).grantRole(await fRouter.EXECUTOR_ROLE(), launchpad.target);
+    await taxManager.connect(deployerSigner).setLaunchpad(launchpad.target);
   } catch (e) {
     console.log(e);
   }
