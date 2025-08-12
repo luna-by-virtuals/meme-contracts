@@ -131,7 +131,7 @@ contract FRouter is
 
         pair.swap(amountIn, 0, 0, amountOut);
 
-        return (amountIn, amountOut);
+        return (amountIn, amount);
     }
 
     function buy(
