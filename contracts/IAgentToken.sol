@@ -39,10 +39,6 @@ interface IAgentToken is
 
     event ProjectTaxRecipientUpdated(address treasury);
 
-    event ValidCallerAdded(bytes32 addedValidCaller);
-
-    event ValidCallerRemoved(bytes32 removedValidCaller);
-
     /**
      * @dev function {addInitialLiquidity}
      *
@@ -95,46 +91,6 @@ interface IAgentToken is
     function removeLiquidityPool(address removedLiquidityPool_) external;
 
     /**
-     * @dev function {isValidCaller}
-     *
-     * Return if an address is a valid caller
-     *
-     * @param queryHash_ The code hash being queried
-     * @return bool The address is / isn't a valid caller
-     */
-    function isValidCaller(bytes32 queryHash_) external view returns (bool);
-
-    /**
-     * @dev function {validCallers}
-     *
-     * Returns a list of all valid caller code hashes
-     *
-     * @return validCallerHashes_ a list of all valid caller code hashes
-     */
-    function validCallers()
-        external
-        view
-        returns (bytes32[] memory validCallerHashes_);
-
-    /**
-     * @dev function {addValidCaller} onlyOwner
-     *
-     * Allows the owner to add the hash of a valid caller
-     *
-     * @param newValidCallerHash_ The hash of the new valid caller
-     */
-    function addValidCaller(bytes32 newValidCallerHash_) external;
-
-    /**
-     * @dev function {removeValidCaller} onlyOwner
-     *
-     * Allows the owner to remove a valid caller
-     *
-     * @param removedValidCallerHash_ The hash of the old removed valid caller
-     */
-    function removeValidCaller(bytes32 removedValidCallerHash_) external;
-
-    /**
      * @dev function {setProjectTaxRecipient} onlyOwner
      *
      * Allows the manager to set the project tax recipient address
@@ -163,8 +119,8 @@ interface IAgentToken is
      * @param newProjectSellTaxBasisPoints_ The new sell tax rate
      */
     function setProjectTaxRates(
-        uint16 newProjectBuyTaxBasisPoints_,
-        uint16 newProjectSellTaxBasisPoints_
+        uint32 newProjectBuyTaxBasisPoints_,
+        uint32 newProjectSellTaxBasisPoints_
     ) external;
 
     /**

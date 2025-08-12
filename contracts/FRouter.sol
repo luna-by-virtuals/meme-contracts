@@ -67,13 +67,13 @@ contract FRouter is
         if (assetToken_ == assetToken) {
             uint256 newReserveB = reserveB + amountIn;
 
-            uint256 newReserveA = k / newReserveB;
-
+            uint256 newReserveA = (k + newReserveB -1) / newReserveB;
+            
             amountOut = reserveA - newReserveA;
         } else {
             uint256 newReserveA = reserveA + amountIn;
 
-            uint256 newReserveB = k / newReserveA;
+            uint256 newReserveB = (k + newReserveA -1) / newReserveA;
 
             amountOut = reserveB - newReserveB;
         }
