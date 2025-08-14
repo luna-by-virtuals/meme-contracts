@@ -640,48 +640,6 @@ contract AgentToken is Context, IAgentToken, Ownable {
         _afterTokenTransfer(from, to, amount);
     }
 
-    /**
-     * @dev function {_pretaxValidationAndLimits}
-     *
-     * Perform validation on pre-tax amounts
-     *
-     * @param from_ From address for the transaction
-     * @param to_ To address for the transaction
-     * @param amount_ Amount of the transaction
-     */
-    function _pretaxValidationAndLimits(
-        address from_,
-        address to_,
-        uint256 amount_
-    ) internal view returns (uint256 fromBalance_) {
-        // This can't be a transfer to the liquidity pool before the funding date
-        // UNLESS the from address is this contract. This ensures that the initial
-        // LP funding transaction is from this contract using the supply of tokens
-        // designated for the LP pool, and therefore the initial price in the pool
-        // is being set as expected.
-        //
-        // This protects from, for example, tokens from a team minted supply being
-        // paired with ETH and added to the pool, setting the initial price, BEFORE
-        // the initial liquidity is added through this contract.
-        if (to_ == uniswapV2Pair && from_ != address(this) && fundedDate == 0) {
-            revert InitialLiquidityNotYetAdded();
-        }
-
-        if (from_ == address(0)) {
-            revert TransferFromZeroAddress();
-        }
-
-        if (to_ == address(0)) {
-            revert TransferToZeroAddress();
-        }
-
-        fromBalance_ = _balances[from_];
-        if (fromBalance_ < amount_) {
-            revert TransferAmountExceedsBalance();
-        }
-
-        return (fromBalance_);
-    }
 
     /**
      * @dev function {_taxProcessing}

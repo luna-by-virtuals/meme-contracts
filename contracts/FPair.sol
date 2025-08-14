@@ -128,12 +128,14 @@ contract FPair is IFPair, ReentrancyGuard {
         require(_pool.reserve0 > 0, "Reserve is zero");
         uint256 reserve1Amount = _pool.reserve1 * 1e18;
         uint256 priceScaled = reserve1Amount / _pool.reserve0;
-        return priceScaled / 1e18;
+        return priceScaled;
     }
 
     function priceBLast() public view returns (uint256) {
         require(_pool.reserve1 > 0, "Reserve is zero");
-        return _pool.reserve0 / _pool.reserve1;
+        uint256 reserve0Amount = _pool.reserve0 * 1e18;
+        uint256 priceScaled = reserve0Amount / _pool.reserve1;
+        return priceScaled;
     }
 
     function balance() public view returns (uint256) {
