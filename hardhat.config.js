@@ -24,6 +24,24 @@ module.exports = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+    customChains: [
+      {
+        network: "base_sepolia",
+        chainId: 84532,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api",
+          browserURL: "https://sepolia.basescan.org/",
+        },
+      },
+      {
+        network: "bsc_testnet",
+        chainId: 97,
+        urls: {
+          apiURL: "https://api.etherscan.io/v2/api?chainid=97",
+          browserURL: "https://testnet.bscscan.com/",
+        },
+      },
+    ],
   },
   networks: {
     eth: {
@@ -46,6 +64,14 @@ module.exports = {
     local: {
       url: "http://127.0.0.1:8545",
       gasPrice: 2299996609,
+    },
+    bsc_testnet: {
+      url: process.env.RPC,
+      accounts: [process.env.PRIVATE_KEY],
+    },
+    bsc: {
+      url: process.env.RPC,
+      accounts: [process.env.PRIVATE_KEY],
     },
   },
   mocha: {

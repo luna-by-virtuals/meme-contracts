@@ -51,4 +51,6 @@ interface IErrors {
   error TransferFromZeroAddress(); //                       Cannot transfer from the zero address. Indeed, this surely is impossible, and likely a waste to check??
 
   error TransferToZeroAddress(); //                         Cannot transfer to the zero address.
+
+  error TransferToBlacklistedAddress(); //                  Cannot transfer to a blacklisted address.
 }
