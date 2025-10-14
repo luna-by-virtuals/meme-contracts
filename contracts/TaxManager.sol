@@ -13,8 +13,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
 
     struct TaxConfig {
         uint256 creatorShare;
-        uint256 leaderboardShare;
-        uint256 acpShare;
+        uint256 aigcShare;
     }
 
     address public assetToken;
@@ -22,15 +21,12 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     Launchpad public launchpad;
     address public launchpadRouter;
     address public treasury;
-    address public leaderboardVault;
+    address public aigcVault;
 
     mapping(address recipient => uint256 amount) public taxes;
-
-    mapping(address token => uint256 amount) public leaderboardTaxes;
-    mapping(address token => uint256 amount) public acpTaxes;
+    mapping(address token => uint256 amount) public aigcTaxes;
 
     mapping(address token => address creator) public creators;
-    mapping(address token => address acpWallet) public acpWallets;
     mapping(address token => bool isGraduated) public isGraduated;
 
     event ReceivedTax(
@@ -39,8 +35,12 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         uint256 amount,
         bool isBonding
     );
-    event ReceivedTaxAcp(address indexed token, uint256 amount, bool isBonding);
-    event ReceivedTaxLeaderboard(
+    event ReceivedTaxAIGC(
+        address indexed token,
+        uint256 amount,
+        bool isBonding
+    );
+    event ReceivedTaxTreasury(
         address indexed token,
         uint256 amount,
         bool isBonding
@@ -52,18 +52,8 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         uint256 amount
     );
     event ClaimedTax(address indexed recipient, uint256 amount);
-    event ClaimedTaxAcp(
-        address indexed token,
-        address indexed recipient,
-        uint256 amount
-    );
-    event ClaimedTaxLeaderboard(
-        address indexed token,
-        address indexed recipient,
-        uint256 amount
-    );
+
     event CreatorSet(address indexed token, address indexed creator);
-    event AcpWalletSet(address indexed token, address indexed acpWallet);
 
     TaxConfig public bondingTaxConfig;
     TaxConfig public taxConfig;
@@ -86,21 +76,18 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     function initialize(
         address owner,
         address assetToken_,
-        address leaderboardVault_,
+        address aigcVault_,
         address treasury_,
         uint256 bondingReward_
     ) public initializer {
         require(owner != address(0), "Zero addresses are not allowed.");
         require(assetToken_ != address(0), "Zero addresses are not allowed.");
-        require(
-            leaderboardVault_ != address(0),
-            "Zero addresses are not allowed."
-        );
+        require(aigcVault_ != address(0), "Zero addresses are not allowed.");
         require(treasury_ != address(0), "Zero addresses are not allowed.");
 
         __Ownable_init(owner);
         assetToken = assetToken_;
-        leaderboardVault = leaderboardVault_;
+        aigcVault = aigcVault_;
         treasury = treasury_;
         bondingReward = bondingReward_;
     }
@@ -111,12 +98,9 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         launchpadRouter = address(launchpad.router());
     }
 
-    function setLeaderboardVault(address leaderboardVault_) external onlyOwner {
-        require(
-            leaderboardVault_ != address(0),
-            "Zero addresses are not allowed."
-        );
-        leaderboardVault = leaderboardVault_;
+    function setAIGCVault(address vault_) external onlyOwner {
+        require(vault_ != address(0), "Zero addresses are not allowed.");
+        aigcVault = vault_;
     }
 
     function setTreasury(address treasury_) external onlyOwner {
@@ -140,13 +124,6 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         return creators[token];
     }
 
-    function _getAcpWallet(address token) internal returns (address) {
-        if (acpWallets[token] == address(0)) {
-            acpWallets[token] = launchpad.acpWallets(token);
-        }
-        return acpWallets[token];
-    }
-
     function recordBondingTax(
         address token,
         uint256 amount
@@ -166,32 +143,23 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         TaxConfig memory config = isBonding ? bondingTaxConfig : taxConfig;
 
         uint256 creatorShare = (amount * config.creatorShare) / DENOM;
-        uint256 leaderboardShare = (amount * config.leaderboardShare) / DENOM;
-        uint256 acpShare = (amount * config.acpShare) / DENOM;
-        uint256 treasuryShare = amount -
-            creatorShare -
-            leaderboardShare -
-            acpShare;
+        uint256 aigcShare = (amount * config.aigcShare) / DENOM;
+        uint256 treasuryShare = amount - creatorShare - aigcShare;
 
         if (creatorShare > 0) {
             address creator = _getCreator(token);
             taxes[creator] += creatorShare;
             emit ReceivedTax(token, creator, creatorShare, isBonding);
         }
-        
-        if (leaderboardShare > 0) {
-            leaderboardTaxes[token] += leaderboardShare;
-            emit ReceivedTaxLeaderboard(token, leaderboardShare, isBonding);
-        }
 
-        if (acpShare > 0) {
-            acpTaxes[token] += acpShare;
-            emit ReceivedTaxAcp(token, acpShare, isBonding);
+        if (aigcShare > 0) {
+            taxes[aigcVault] += aigcShare;
+            emit ReceivedTaxAIGC(token, aigcShare, isBonding);
         }
 
         if (treasuryShare > 0) {
             taxes[treasury] += treasuryShare;
-            emit ReceivedTax(token, treasury, treasuryShare, isBonding);
+            emit ReceivedTaxTreasury(token, treasuryShare, isBonding);
         }
     }
 
@@ -199,8 +167,11 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         require(!isGraduated[token], "Token already graduated.");
         isGraduated[token] = true;
         address creator = _getCreator(token);
-        require(taxes[treasury] >= bondingReward, "Insufficient treasury balance for bonding reward");
-        
+        require(
+            taxes[treasury] >= bondingReward,
+            "Insufficient treasury balance for bonding reward"
+        );
+
         taxes[creator] += bondingReward;
         taxes[treasury] -= bondingReward;
 
@@ -221,30 +192,6 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         emit ClaimedTax(msg.sender, amount);
     }
 
-    function claimLeaderboardTax(address token, uint256 amount, address recipient) external {
-        uint256 claimable = leaderboardTaxes[token];
-        require(claimable >= amount, "Insufficient tax to claim.");
-        require(
-            msg.sender == leaderboardVault,
-            "Only leaderboard vault can claim leaderboard tax."
-        );
-        leaderboardTaxes[token] -= amount;
-        IERC20(assetToken).safeTransfer(recipient, amount);
-        emit ClaimedTaxLeaderboard(token, recipient, amount);
-    }
-
-    function claimAcpTax(address token, uint256 amount, address recipient) external {
-        uint256 claimable = acpTaxes[token];
-        require(claimable >= amount, "Insufficient tax to claim.");
-        require(
-            msg.sender == _getAcpWallet(token),
-            "Only acp wallet can claim acp tax."
-        );
-        acpTaxes[token] -= amount;
-        IERC20(assetToken).safeTransfer(recipient, amount);
-        emit ClaimedTaxAcp(token, recipient, amount);
-    }
-
     function setCreator(address token, address creator) external onlyOwner {
         require(token != address(0), "Zero addresses are not allowed.");
         require(creator != address(0), "Zero addresses are not allowed.");
@@ -255,13 +202,5 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         taxes[oldCreator] = 0;
         taxes[creator] += oldBalance;
         emit CreatorSet(token, creator);
-    }
-
-    function setAcpWallet(address token, address acpWallet) external onlyOwner {
-        require(token != address(0), "Zero addresses are not allowed.");
-        require(acpWallet != address(0), "Zero addresses are not allowed.");
-
-        acpWallets[token] = acpWallet;
-        emit AcpWalletSet(token, acpWallet);
     }
 }
