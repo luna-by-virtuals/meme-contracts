@@ -31,6 +31,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
 
     mapping(address token => address creator) public creators;
     mapping(address token => address acpWallet) public acpWallets;
+    mapping(address token => bool isGraduated) public isGraduated;
 
     event ReceivedTax(
         address indexed token,
@@ -150,7 +151,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         address token,
         uint256 amount
     ) external onlyLaunchpadRouter {
-        _distributeTaxes(token, amount, true);
+        _distributeTaxes(token, amount, !isGraduated[token]);
     }
 
     function setBondingReward(uint256 bondingReward_) external onlyOwner {
@@ -177,6 +178,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
             taxes[creator] += creatorShare;
             emit ReceivedTax(token, creator, creatorShare, isBonding);
         }
+        
         if (leaderboardShare > 0) {
             leaderboardTaxes[token] += leaderboardShare;
             emit ReceivedTaxLeaderboard(token, leaderboardShare, isBonding);
@@ -194,6 +196,8 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     }
 
     function graduate(address token) external onlyLaunchpadRouter {
+        require(!isGraduated[token], "Token already graduated.");
+        isGraduated[token] = true;
         address creator = _getCreator(token);
         require(taxes[treasury] >= bondingReward, "Insufficient treasury balance for bonding reward");
         
