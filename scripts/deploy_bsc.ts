@@ -15,7 +15,7 @@ const deployerSigner = new ethers.Wallet(
   try {
     const taxManager = await upgrades.deployProxy(
       await ethers.getContractFactory("TaxManager"),
-      [process.env.ADMIN, process.env.WETH, process.env.ADMIN, process.env.TREASURY, process.env.BONDING_REWARD],
+      [process.env.ADMIN, process.env.WBNB, process.env.ADMIN, process.env.TREASURY, process.env.BONDING_REWARD],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER,
       }
@@ -23,32 +23,32 @@ const deployerSigner = new ethers.Wallet(
     await taxManager.waitForDeployment();
     console.log("TaxManager deployed to:", taxManager.target);
 
-    const fFactory = await upgrades.deployProxy(
-      await ethers.getContractFactory("FFactory"),
+    const fFactoryV2 = await upgrades.deployProxy(
+      await ethers.getContractFactory("FFactoryV2"),
       [taxManager.target, process.env.BONDING_TAX, process.env.BONDING_TAX],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER,
       }
     );
-    await fFactory.waitForDeployment();
-    console.log("FFactory deployed to:", fFactory.target);
-    await fFactory.grantRole(await fFactory.ADMIN_ROLE(), process.env.DEPLOYER);
+    await fFactoryV2.waitForDeployment();
+    console.log("FFactoryV2 deployed to:", fFactoryV2.target);
+    await fFactoryV2.grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.DEPLOYER);
 
     const fRouter = await upgrades.deployProxy(
       await ethers.getContractFactory("FRouter"),
-      [fFactory.target, process.env.WETH],
+      [fFactoryV2.target, process.env.WBNB],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER,
       }
     );
     await fRouter.waitForDeployment();
     console.log("FRouter deployed to:", fRouter.target);
-    await fFactory.connect(deployerSigner).setRouter(fRouter.target);
+    await fFactoryV2.connect(deployerSigner).setRouter(fRouter.target);
 
-    const launchpad = await upgrades.deployProxy(
-      await ethers.getContractFactory("Launchpad"),
+    const launchpadV2 = await upgrades.deployProxy(
+      await ethers.getContractFactory("LaunchpadV2"),
       [
-        fFactory.target,
+        fFactoryV2.target,
         fRouter.target,
         process.env.TOKEN_INITIAL_SUPPLY,
         parseEther(process.env.GRAD_THRESHOLD!),
@@ -57,8 +57,8 @@ const deployerSigner = new ethers.Wallet(
         initialOwner: process.env.CONTRACT_CONTROLLER,
       }
     );
-    await launchpad.waitForDeployment();
-    console.log("Launchpad deployed to:", launchpad.target);
+    await launchpadV2.waitForDeployment();
+    console.log("LaunchpadV2 deployed to:", launchpadV2.target);
 
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
 
@@ -69,7 +69,7 @@ const deployerSigner = new ethers.Wallet(
         0,
         process.env.TOKEN_INITIAL_SUPPLY,
         process.env.BOT_PROTECTION,
-        launchpad.target,
+        launchpadV2.target,
       ]
     );
 
@@ -83,15 +83,15 @@ const deployerSigner = new ethers.Wallet(
       ]
     );
 
-    await launchpad.setDeployParams([
+    await launchpadV2.setDeployParams([
       process.env.ADMIN,
       process.env.UNISWAP_ROUTER,
       supplyParams,
       taxParams,
     ]);
-    await fFactory.connect(deployerSigner).grantRole(await fFactory.CREATOR_ROLE(), launchpad.target);
-    await fRouter.connect(deployerSigner).grantRole(await fRouter.EXECUTOR_ROLE(), launchpad.target);
-    await taxManager.connect(deployerSigner).setLaunchpad(launchpad.target);
+    await fFactoryV2.connect(deployerSigner).grantRole(await fFactoryV2.CREATOR_ROLE(), launchpadV2.target);
+    await fRouter.connect(deployerSigner).grantRole(await fRouter.EXECUTOR_ROLE(), launchpadV2.target);
+    await taxManager.connect(deployerSigner).setLaunchpad(launchpadV2.target);
   } catch (e) {
     console.log(e);
   }
