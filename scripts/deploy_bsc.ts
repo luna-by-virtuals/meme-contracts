@@ -18,17 +18,20 @@ const deployerSigner = new ethers.Wallet(
     console.log("Using WBNB address:", wbnbAddress);
 
     // 1. deploy taxManager
+    // Note on ownership:
+    // - initialOwner (CONTRACT_CONTROLLER): Controls proxy upgrades
+    // - initialize owner param (DEPLOYER): Controls business logic (onlyOwner functions)
     const taxManager = await upgrades.deployProxy(
       await ethers.getContractFactory("TaxManager"),
       [
-        process.env.DEPLOYER, // Use deployer as initial owner
+        process.env.ADMIN, // Business logic owner (can call setLaunchpad, setConfigs, etc.)
         wbnbAddress,
-        process.env.AIGC_VAULT, // aigcVault
+        process.env.AIGC_VAULT,
         process.env.TREASURY,
         process.env.BONDING_REWARD,
       ],
       {
-        initialOwner: process.env.DEPLOYER, // Deployer has control initially
+        initialOwner: process.env.CONTRACT_CONTROLLER, // Proxy admin (can upgrade contract)
       }
     );
     await taxManager.waitForDeployment();
@@ -51,33 +54,28 @@ const deployerSigner = new ethers.Wallet(
       await ethers.getContractFactory("FFactoryV2"),
       [taxManagerAddress, process.env.BONDING_TAX, process.env.BONDING_TAX],
       {
-        initialOwner: process.env.DEPLOYER,
+        initialOwner: process.env.CONTRACT_CONTROLLER,
       }
     );
     await fFactoryV2.waitForDeployment();
     const fFactoryV2Address = await fFactoryV2.getAddress();
     console.log("FFactoryV2 deployed to:", fFactoryV2Address);
 
-    // grant ADMIN_ROLE to deployer
-    await fFactoryV2
-      .connect(deployerSigner)
-      .grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.DEPLOYER);
-
     // 3. deploy fRouter
     const fRouter = await upgrades.deployProxy(
       await ethers.getContractFactory("FRouter"),
       [fFactoryV2Address, wbnbAddress],
       {
-        initialOwner: process.env.DEPLOYER,
+        initialOwner: process.env.CONTRACT_CONTROLLER,
       }
     );
     await fRouter.waitForDeployment();
     const fRouterAddress = await fRouter.getAddress();
     console.log("FRouter deployed to:", fRouterAddress);
 
-    await fFactoryV2.connect(deployerSigner).setRouter(fRouterAddress);
+    await fFactoryV2.connect(adminSigner).setRouter(fRouterAddress);
     console.log("fFactoryV2 set router to:", fRouterAddress);
- 
+
     // 4. deploy launchpadV2
     const launchpadV2 = await upgrades.deployProxy(
       await ethers.getContractFactory("LaunchpadV2"),
@@ -88,7 +86,7 @@ const deployerSigner = new ethers.Wallet(
         parseEther(process.env.GRAD_THRESHOLD!),
       ],
       {
-        initialOwner: process.env.DEPLOYER,
+        initialOwner: process.env.CONTRACT_CONTROLLER,
       }
     );
     await launchpadV2.waitForDeployment();
@@ -133,28 +131,23 @@ const deployerSigner = new ethers.Wallet(
       .connect(deployerSigner)
       .grantRole(await fRouter.EXECUTOR_ROLE(), launchpadV2Address);
 
-    // 5. transfer ownership to CONTRACT_CONTROLLER
-    console.log("\n=== Transferring Ownership and renounce roles ===");
+    // 5. Transfer business logic ownership to ADMIN
+    // Note: Proxy admin (CONTRACT_CONTROLLER) remains unchanged and can still upgrade contracts
+    console.log("\n=== Transferring Business Logic Ownership ===");
     await taxManager
       .connect(deployerSigner)
       .transferOwnership(process.env.ADMIN);
-    console.log("TaxManager ownership transferred to:", process.env.ADMIN);
+    console.log("TaxManager business owner transferred to:", process.env.ADMIN);
 
     await fFactoryV2
       .connect(deployerSigner)
-      .grantRole(
-        await fFactoryV2.DEFAULT_ADMIN_ROLE(),
-        process.env.ADMIN
-      );
+      .grantRole(await fFactoryV2.DEFAULT_ADMIN_ROLE(), process.env.ADMIN);
     await fFactoryV2
       .connect(deployerSigner)
       .renounceRole(
         await fFactoryV2.DEFAULT_ADMIN_ROLE(),
         process.env.DEPLOYER
       );
-    await fFactoryV2
-      .connect(deployerSigner)
-      .renounceRole(await fFactoryV2.ADMIN_ROLE(), process.env.DEPLOYER);
     console.log(
       "FFactoryV2 DEFAULT_ADMIN_ROLE transferred to:",
       process.env.ADMIN
@@ -162,10 +155,7 @@ const deployerSigner = new ethers.Wallet(
 
     await fRouter
       .connect(deployerSigner)
-      .grantRole(
-        await fRouter.DEFAULT_ADMIN_ROLE(),
-        process.env.ADMIN
-      );
+      .grantRole(await fRouter.DEFAULT_ADMIN_ROLE(), process.env.ADMIN);
     await fRouter
       .connect(deployerSigner)
       .renounceRole(await fRouter.DEFAULT_ADMIN_ROLE(), process.env.DEPLOYER);
@@ -178,10 +168,7 @@ const deployerSigner = new ethers.Wallet(
     await launchpadV2
       .connect(deployerSigner)
       .transferOwnership(process.env.ADMIN);
-    console.log(
-      "LaunchpadV2 ownership transferred to:",
-      process.env.ADMIN
-    );
+    console.log("LaunchpadV2 ownership transferred to:", process.env.ADMIN);
 
     // Final summary
     console.log("\n=== Deployment Summary ===");
