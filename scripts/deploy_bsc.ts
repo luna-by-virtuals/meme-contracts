@@ -137,17 +137,14 @@ const deployerSigner = new ethers.Wallet(
     console.log("\n=== Transferring Ownership and renounce roles ===");
     await taxManager
       .connect(deployerSigner)
-      .transferOwnership(process.env.CONTRACT_CONTROLLER);
-    console.log(
-      "TaxManager ownership transferred to:",
-      process.env.CONTRACT_CONTROLLER
-    );
+      .transferOwnership(process.env.ADMIN);
+    console.log("TaxManager ownership transferred to:", process.env.ADMIN);
 
     await fFactoryV2
       .connect(deployerSigner)
       .grantRole(
         await fFactoryV2.DEFAULT_ADMIN_ROLE(),
-        process.env.CONTRACT_CONTROLLER
+        process.env.ADMIN
       );
     await fFactoryV2
       .connect(deployerSigner)
@@ -160,30 +157,30 @@ const deployerSigner = new ethers.Wallet(
       .renounceRole(await fFactoryV2.ADMIN_ROLE(), process.env.DEPLOYER);
     console.log(
       "FFactoryV2 DEFAULT_ADMIN_ROLE transferred to:",
-      process.env.CONTRACT_CONTROLLER
+      process.env.ADMIN
     );
 
     await fRouter
       .connect(deployerSigner)
       .grantRole(
         await fRouter.DEFAULT_ADMIN_ROLE(),
-        process.env.CONTRACT_CONTROLLER
+        process.env.ADMIN
       );
     await fRouter
       .connect(deployerSigner)
       .renounceRole(await fRouter.DEFAULT_ADMIN_ROLE(), process.env.DEPLOYER);
     console.log(
       "FRouter DEFAULT_ADMIN_ROLE transferred to:",
-      process.env.CONTRACT_CONTROLLER
+      process.env.ADMIN
     );
 
     // launchpadV2 transfer ownership to contract controller
     await launchpadV2
       .connect(deployerSigner)
-      .transferOwnership(process.env.CONTRACT_CONTROLLER);
+      .transferOwnership(process.env.ADMIN);
     console.log(
       "LaunchpadV2 ownership transferred to:",
-      process.env.CONTRACT_CONTROLLER
+      process.env.ADMIN
     );
 
     // Final summary
