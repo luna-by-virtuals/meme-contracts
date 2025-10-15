@@ -92,6 +92,16 @@ const deployerSigner = new ethers.Wallet(
     await fFactoryV2.connect(deployerSigner).grantRole(await fFactoryV2.CREATOR_ROLE(), launchpadV2.target);
     await fRouter.connect(deployerSigner).grantRole(await fRouter.EXECUTOR_ROLE(), launchpadV2.target);
     await taxManager.connect(deployerSigner).setLaunchpad(launchpadV2.target);
+    await taxManager.connect(deployerSigner).setConfigs(
+      {
+        creatorShare: process.env.BONDING_CREATOR_SHARE,
+        aigcShare: process.env.BONDING_AIGC_SHARE,
+      },
+      {
+        creatorShare: process.env.CREATOR_SHARE,
+        aigcShare: process.env.AIGC_SHARE,
+      }
+    );
   } catch (e) {
     console.log(e);
   }

@@ -70,15 +70,11 @@ contract LaunchpadV2 is
 
     mapping(address => Token) public tokenInfo;
     address[] public tokenInfos;
-    mapping(address token => address acpWallet) public acpWallets;
-    address private _acpManager;
 
     event Launched(address indexed token, address indexed pair, uint);
     event Deployed(address indexed token, uint256 amount0, uint256 amount1);
     event Graduated(address indexed token);
     event DeployParamsSet(address tokenAdmin, address uniswapRouter, bytes tokenSupplyParams, bytes tokenTaxParams);
-    event AcpManagerSet(address indexed acpManager);
-    event AcpWalletSet(address indexed token, address indexed acpWallet);
     event TokenParamsSet(uint256 initialSupply, uint256 gradThreshold);
 
     error InvalidTokenStatus();
@@ -133,17 +129,6 @@ contract LaunchpadV2 is
     function setDeployParams(DeployParams memory params) public onlyOwner {
         _deployParams = params;
         emit DeployParamsSet(params.tokenAdmin, params.uniswapRouter, params.tokenSupplyParams, params.tokenTaxParams);
-    }
-
-    function setAcpManager(address acpManager) external onlyOwner {
-        _acpManager = acpManager;
-        emit AcpManagerSet(acpManager);
-    }
-
-    function setAcpWallet(address token, address acpWallet) external {
-        require(msg.sender == _acpManager, "Only acp manager can call this function.");
-        acpWallets[token] = acpWallet;
-        emit AcpWalletSet(token, acpWallet);
     }
 
     function launch(

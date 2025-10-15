@@ -124,13 +124,11 @@ describe("Launchpad", function () {
     await taxManager.setConfigs(
       {
         creatorShare: process.env.BONDING_CREATOR_SHARE,
-        leaderboardShare: process.env.BONDING_LEADERBOARD_SHARE,
-        acpShare: process.env.BONDING_ACP_SHARE,
+        aigcShare: process.env.BONDING_AIGC_SHARE,
       },
       {
         creatorShare: process.env.CREATOR_SHARE,
-        leaderboardShare: process.env.LEADERBOARD_SHARE,
-        acpShare: process.env.ACP_SHARE,
+        aigcShare: process.env.AIGC_SHARE,
       }
     );
 
