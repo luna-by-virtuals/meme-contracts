@@ -480,7 +480,7 @@ contract AgentTokenV2 is Context, IAgentTokenV2, Ownable {
      */
     function name() public view virtual override returns (string memory) {
         if (fundedDate == 0) {
-            return string.concat("fun ", _name);
+            return _name;
         }
         return _name;
     }
