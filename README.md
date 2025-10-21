@@ -2,6 +2,9 @@
 
 Pump.fun but on **BNB Smart Chain (BSC)**. With built-in AI generated marketing content!
 
+## AI Generated Content Instructions
+<<Jak could you add the screenshots and instructions on how to get the generated content here?>>
+
 
 ## Tech Stack
 
