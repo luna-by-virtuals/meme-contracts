@@ -8,17 +8,17 @@ Pump.fun but on **BNB Chain**. With built-in AI generated marketing content!
 ### Step 1: Tag for AIGC
 Write a tweet. Tag @butler_agent + your meme coin's X handle (e.g. @memecoin)
 
-<img src="https://dev.luna.fun/assets/about1-uuhHwqaM.png" alt="About Image" width="400" />
+<img src="./Images/about1-uuhHwqaM.png" alt="About Image" width="400" />
 
 ### Step 2: Add Your Prompt
 Got a meme idea? Add your prompt in your tweet.
 
-<img src="https://dev.luna.fun/assets/about2-RhlTH5Ql.png" alt="About Image" width="400" />
+<img src="./Images/about2-RhlTH5Ql.png" alt="About Image" width="400" />
 
 ### Step 3: Let the AI Cook
 Luna delivers meme videos — your meme project will likely quote-repost it.
 
-<img src="https://dev.luna.fun/assets/about3-BmMnPyAn.png" alt="About Image" width="400" />
+<img src="./Images/about3-BmMnPyAn.png" alt="About Image" width="400" />
 
 
 ## Tech Stack
