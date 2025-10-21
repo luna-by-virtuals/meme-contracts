@@ -3,18 +3,23 @@
 Pump.fun but on **BNB Smart Chain (BSC)**. With built-in AI generated marketing content!
 
 ## AI Generated Content Instructions
-<<Jak could you add the screenshots and instructions on how to get the generated content here?>>
-![About Image](https://dev.luna.fun/assets/about1-uuhHwqaM.png)
-Step 1: Tag for AIGC
+
+
+### Step 1: Tag for AIGC
 Write a tweet. Tag @butler_agent + your meme coin's X handle (e.g. @memecoin)
 
-![About Image](https://dev.luna.fun/assets/about2-RhlTH5Ql.png)
-Step 2: Add Your Prompt
+<img src="https://dev.luna.fun/assets/about1-uuhHwqaM.png" alt="About Image" width="400" />
+
+### Step 2: Add Your Prompt
 Got a meme idea? Add your prompt in your tweet.
 
-![About Image](https://dev.luna.fun/assets/about3-BmMnPyAn.png)
-Step 3: Let the AI Cook
+<img src="https://dev.luna.fun/assets/about2-RhlTH5Ql.png" alt="About Image" width="400" />
+
+### Step 3: Let the AI Cook
 Luna delivers meme videos — your meme project will likely quote-repost it.
+
+<img src="https://dev.luna.fun/assets/about3-BmMnPyAn.png" alt="About Image" width="400" />
+
 
 ## Tech Stack
 
