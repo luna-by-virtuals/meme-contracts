@@ -63,7 +63,7 @@ Luna delivers meme videos — your meme project will likely quote-repost it.
 - **Upgradeable Contracts**: All core contracts use OpenZeppelin's upgradeable proxy pattern
 - **Role-Based Access Control**: Secure permission system for different contract functions
 - **Liquidity Pool Management**: Automatic creation and management of trading pairs
-- **Creator Rewards**: Token creators receive a share of trading fees and bonding rewards
+- **Creator Rewards**: Token creators receive a share of trading fees
 
 
 ## Core Contracts
