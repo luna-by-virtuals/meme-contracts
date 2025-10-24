@@ -38,7 +38,7 @@ const deployerSigner = new ethers.Wallet(
     const taxManagerAddress = await taxManager.getAddress();
     console.log("TaxManager deployed to:", taxManagerAddress);
 
-    await taxManager.connect(deployerSigner).setConfigs(
+    await taxManager.connect(adminSigner).setConfigs(
       {
         creatorShare: process.env.BONDING_CREATOR_SHARE,
         aigcShare: process.env.BONDING_AIGC_SHARE,
@@ -73,6 +73,8 @@ const deployerSigner = new ethers.Wallet(
     const fRouterAddress = await fRouter.getAddress();
     console.log("FRouter deployed to:", fRouterAddress);
 
+    // Grant ADMIN_ROLE to admin before calling setRouter
+    await fFactoryV2.connect(deployerSigner).grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN);
     await fFactoryV2.connect(adminSigner).setRouter(fRouterAddress);
     console.log("fFactoryV2 set router to:", fRouterAddress);
 
@@ -93,7 +95,7 @@ const deployerSigner = new ethers.Wallet(
     const launchpadV2Address = await launchpadV2.getAddress();
     console.log("LaunchpadV2 deployed to:", launchpadV2Address);
 
-    await taxManager.connect(deployerSigner).setLaunchpad(launchpadV2Address);
+    await taxManager.connect(adminSigner).setLaunchpad(launchpadV2Address);
     console.log("taxManager set launchpad to:", launchpadV2Address);
 
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
@@ -116,7 +118,7 @@ const deployerSigner = new ethers.Wallet(
         taxManagerAddress,
       ]
     );
-    await launchpadV2.setDeployParams([
+    await launchpadV2.connect(deployerSigner).setDeployParams([
       process.env.ADMIN,
       process.env.UNISWAP_ROUTER,
       supplyParams,
@@ -134,10 +136,8 @@ const deployerSigner = new ethers.Wallet(
     // 5. Transfer business logic ownership to ADMIN
     // Note: Proxy admin (CONTRACT_CONTROLLER) remains unchanged and can still upgrade contracts
     console.log("\n=== Transferring Business Logic Ownership ===");
-    await taxManager
-      .connect(deployerSigner)
-      .transferOwnership(process.env.ADMIN);
-    console.log("TaxManager business owner transferred to:", process.env.ADMIN);
+    // TaxManager already owned by ADMIN (set during initialization)
+    console.log("TaxManager already owned by:", process.env.ADMIN);
 
     await fFactoryV2
       .connect(deployerSigner)
