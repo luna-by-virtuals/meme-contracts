@@ -1,6 +1,19 @@
 import { parseEther } from "ethers";
 import { ethers, upgrades } from "hardhat";
 
+// Gas configuration for BSC
+const GAS_CONFIG = {
+  gasPrice: ethers.parseUnits("10", "gwei"), // 10 gwei
+  gasLimit: 8000000, // 8M gas limit for deployments
+};
+
+// Optimized gas config for simple transactions
+const SIMPLE_TX_CONFIG = {
+  gasPrice: ethers.parseUnits("10", "gwei"), // 10 gwei
+  gasLimit: 200000, // 200k gas limit for simple transactions
+};
+
+
 const adminSigner = new ethers.Wallet(
   process.env.ADMIN_PRIVATE_KEY,
   ethers.provider
@@ -16,11 +29,30 @@ const deployerSigner = new ethers.Wallet(
     // Use mockWBNB address instead of process.env.WBNB
     const wbnbAddress = process.env.WBNB;
     console.log("Using WBNB address:", wbnbAddress);
+    
+    console.log("Starting deployment process...");
+    console.log("Environment variables check:");
+    console.log("- DEPLOYER:", process.env.DEPLOYER);
+    console.log("- ADMIN:", process.env.ADMIN);
+    console.log("- CONTRACT_CONTROLLER:", process.env.CONTRACT_CONTROLLER);
+    console.log("- TREASURY:", process.env.TREASURY);
+    console.log("- AIGC_VAULT:", process.env.AIGC_VAULT);
+    console.log("- BONDING_REWARD:", process.env.BONDING_REWARD);
+    console.log("- RPC:", process.env.RPC);
+
+    // Check deployer balance
+    const deployerBalance = await ethers.provider.getBalance(deployerSigner.address);
+    console.log("Deployer balance:", ethers.formatEther(deployerBalance), "BNB");
+    
+    // Check admin balance
+    const adminBalance = await ethers.provider.getBalance(adminSigner.address);
+    console.log("Admin balance:", ethers.formatEther(adminBalance), "BNB");
 
     // 1. deploy taxManager
     // Note on ownership:
     // - initialOwner (CONTRACT_CONTROLLER): Controls proxy upgrades
     // - initialize owner param (DEPLOYER): Controls business logic (onlyOwner functions)
+    console.log("Deploying TaxManager...");
     const taxManager = await upgrades.deployProxy(
       await ethers.getContractFactory("TaxManager"),
       [
@@ -32,12 +64,17 @@ const deployerSigner = new ethers.Wallet(
       ],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER, // Proxy admin (can upgrade contract)
+        gasPrice: GAS_CONFIG.gasPrice,
+        gasLimit: GAS_CONFIG.gasLimit,
       }
     );
+    console.log("TaxManager proxy deployment initiated, waiting for deployment...");
     await taxManager.waitForDeployment();
     const taxManagerAddress = await taxManager.getAddress();
     console.log("TaxManager deployed to:", taxManagerAddress);
+    console.log("TaxManager deployment completed successfully");
 
+    console.log("Setting TaxManager configs...");
     await taxManager.connect(adminSigner).setConfigs(
       {
         creatorShare: process.env.BONDING_CREATOR_SHARE,
@@ -46,39 +83,54 @@ const deployerSigner = new ethers.Wallet(
       {
         creatorShare: process.env.CREATOR_SHARE,
         aigcShare: process.env.AIGC_SHARE,
-      }
+      },
+      SIMPLE_TX_CONFIG
     );
+    console.log("TaxManager configs set successfully");
 
     // 2. deploy fFactoryV2
+    console.log("Deploying FFactoryV2...");
     const fFactoryV2 = await upgrades.deployProxy(
       await ethers.getContractFactory("FFactoryV2"),
       [taxManagerAddress, process.env.BONDING_TAX, process.env.BONDING_TAX],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER,
+        gasPrice: GAS_CONFIG.gasPrice,
+        gasLimit: GAS_CONFIG.gasLimit,
       }
     );
+    console.log("FFactoryV2 proxy deployment initiated, waiting for deployment...");
     await fFactoryV2.waitForDeployment();
     const fFactoryV2Address = await fFactoryV2.getAddress();
     console.log("FFactoryV2 deployed to:", fFactoryV2Address);
+    console.log("FFactoryV2 deployment completed successfully");
 
     // 3. deploy fRouter
+    console.log("Deploying FRouter...");
     const fRouter = await upgrades.deployProxy(
       await ethers.getContractFactory("FRouter"),
       [fFactoryV2Address, wbnbAddress],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER,
+        gasPrice: GAS_CONFIG.gasPrice,
+        gasLimit: GAS_CONFIG.gasLimit,
       }
     );
+    console.log("FRouter proxy deployment initiated, waiting for deployment...");
     await fRouter.waitForDeployment();
     const fRouterAddress = await fRouter.getAddress();
     console.log("FRouter deployed to:", fRouterAddress);
+    console.log("FRouter deployment completed successfully");
 
     // Grant ADMIN_ROLE to admin before calling setRouter
-    await fFactoryV2.connect(deployerSigner).grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN);
-    await fFactoryV2.connect(adminSigner).setRouter(fRouterAddress);
+    console.log("Granting ADMIN_ROLE to admin and setting router...");
+    await fFactoryV2.connect(deployerSigner).grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN, SIMPLE_TX_CONFIG);
+    await fFactoryV2.connect(adminSigner).setRouter(fRouterAddress, SIMPLE_TX_CONFIG);
     console.log("fFactoryV2 set router to:", fRouterAddress);
+    console.log("Router setup completed successfully");
 
     // 4. deploy launchpadV2
+    console.log("Deploying LaunchpadV2...");
     const launchpadV2 = await upgrades.deployProxy(
       await ethers.getContractFactory("LaunchpadV2"),
       [
@@ -89,14 +141,20 @@ const deployerSigner = new ethers.Wallet(
       ],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER,
+        gasPrice: GAS_CONFIG.gasPrice,
+        gasLimit: GAS_CONFIG.gasLimit,
       }
     );
+    console.log("LaunchpadV2 proxy deployment initiated, waiting for deployment...");
     await launchpadV2.waitForDeployment();
     const launchpadV2Address = await launchpadV2.getAddress();
     console.log("LaunchpadV2 deployed to:", launchpadV2Address);
+    console.log("LaunchpadV2 deployment completed successfully");
 
-    await taxManager.connect(adminSigner).setLaunchpad(launchpadV2Address);
+    console.log("Setting launchpad in TaxManager...");
+    await taxManager.connect(adminSigner).setLaunchpad(launchpadV2Address, SIMPLE_TX_CONFIG);
     console.log("taxManager set launchpad to:", launchpadV2Address);
+    console.log("Launchpad set in TaxManager successfully");
 
     const abiCoder = ethers.AbiCoder.defaultAbiCoder();
     const supplyParams = abiCoder.encode(
@@ -118,59 +176,73 @@ const deployerSigner = new ethers.Wallet(
         taxManagerAddress,
       ]
     );
+    console.log("Setting deploy params for LaunchpadV2...");
     await launchpadV2.connect(deployerSigner).setDeployParams([
       process.env.ADMIN,
       process.env.UNISWAP_ROUTER,
       supplyParams,
       taxParams,
-    ]);
+    ], SIMPLE_TX_CONFIG);
     console.log("launchpadV2 setDeployParams successfully");
+    console.log("Deploy params set successfully");
 
+    console.log("Granting roles to LaunchpadV2...");
     await fFactoryV2
       .connect(deployerSigner)
-      .grantRole(await fFactoryV2.CREATOR_ROLE(), launchpadV2Address);
+      .grantRole(await fFactoryV2.CREATOR_ROLE(), launchpadV2Address, SIMPLE_TX_CONFIG);
     await fRouter
       .connect(deployerSigner)
-      .grantRole(await fRouter.EXECUTOR_ROLE(), launchpadV2Address);
+      .grantRole(await fRouter.EXECUTOR_ROLE(), launchpadV2Address, SIMPLE_TX_CONFIG);
+    console.log("Roles granted successfully");
 
     // 5. Transfer business logic ownership to ADMIN
     // Note: Proxy admin (CONTRACT_CONTROLLER) remains unchanged and can still upgrade contracts
     console.log("\n=== Transferring Business Logic Ownership ===");
+    console.log("Starting ownership transfer process...");
     // TaxManager already owned by ADMIN (set during initialization)
     console.log("TaxManager already owned by:", process.env.ADMIN);
+    console.log("TaxManager ownership already correct");
 
+    console.log("Transferring FFactoryV2 DEFAULT_ADMIN_ROLE...");
     await fFactoryV2
       .connect(deployerSigner)
-      .grantRole(await fFactoryV2.DEFAULT_ADMIN_ROLE(), process.env.ADMIN);
+      .grantRole(await fFactoryV2.DEFAULT_ADMIN_ROLE(), process.env.ADMIN, SIMPLE_TX_CONFIG);
     await fFactoryV2
       .connect(deployerSigner)
       .renounceRole(
         await fFactoryV2.DEFAULT_ADMIN_ROLE(),
-        process.env.DEPLOYER
+        process.env.DEPLOYER,
+        SIMPLE_TX_CONFIG
       );
     console.log(
       "FFactoryV2 DEFAULT_ADMIN_ROLE transferred to:",
       process.env.ADMIN
     );
+    console.log("FFactoryV2 ownership transfer completed");
 
+    console.log("Transferring FRouter DEFAULT_ADMIN_ROLE...");
     await fRouter
       .connect(deployerSigner)
-      .grantRole(await fRouter.DEFAULT_ADMIN_ROLE(), process.env.ADMIN);
+      .grantRole(await fRouter.DEFAULT_ADMIN_ROLE(), process.env.ADMIN, SIMPLE_TX_CONFIG);
     await fRouter
       .connect(deployerSigner)
-      .renounceRole(await fRouter.DEFAULT_ADMIN_ROLE(), process.env.DEPLOYER);
+      .renounceRole(await fRouter.DEFAULT_ADMIN_ROLE(), process.env.DEPLOYER, SIMPLE_TX_CONFIG);
     console.log(
       "FRouter DEFAULT_ADMIN_ROLE transferred to:",
       process.env.ADMIN
     );
+    console.log("FRouter ownership transfer completed");
 
     // launchpadV2 transfer ownership to contract controller
+    console.log("Transferring LaunchpadV2 ownership...");
     await launchpadV2
       .connect(deployerSigner)
-      .transferOwnership(process.env.ADMIN);
+      .transferOwnership(process.env.ADMIN, SIMPLE_TX_CONFIG);
     console.log("LaunchpadV2 ownership transferred to:", process.env.ADMIN);
+    console.log("LaunchpadV2 ownership transfer completed");
 
     // Final summary
+    console.log("Generating final deployment summary...");
     console.log("\n=== Deployment Summary ===");
     console.log("Mock WBNB:   ", wbnbAddress);
     console.log("TaxManager:  ", taxManagerAddress);
@@ -178,8 +250,10 @@ const deployerSigner = new ethers.Wallet(
     console.log("FRouter:     ", fRouterAddress);
     console.log("LaunchpadV2: ", launchpadV2Address);
     console.log("\n✅ All contracts deployed successfully!");
+    console.log("Deployment completed successfully!");
 
     // help write verify script for these contracts
+    console.log("Generating verification commands...");
     console.log("\n=== Verify Script by running below script ===");
     console.log(
       "npx hardhat verify --network bsc_testnet <contract_address> <constructor_arguments>"
@@ -228,7 +302,10 @@ const deployerSigner = new ethers.Wallet(
       " ",
       parseEther(process.env.GRAD_THRESHOLD!)
     );
+    console.log("Verification commands generated successfully");
   } catch (e) {
-    console.log(e);
+    console.log("Error occurred during deployment:", e);
+    console.log("Deployment failed with error:", e);
+    process.exit(1);
   }
 })();
