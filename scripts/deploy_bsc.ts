@@ -27,6 +27,13 @@ const deployerSigner = new ethers.Wallet(
     console.log("- AIGC_VAULT:", process.env.AIGC_VAULT);
     console.log("- BONDING_REWARD:", process.env.BONDING_REWARD);
     console.log("- RPC:", process.env.RPC);
+    
+    // Verify that deployer and admin addresses match the signers
+    console.log("Signer verification:");
+    console.log("- Deployer signer address:", deployerSigner.address);
+    console.log("- Admin signer address:", adminSigner.address);
+    console.log("- DEPLOYER env matches deployer signer:", process.env.DEPLOYER === deployerSigner.address);
+    console.log("- ADMIN env matches admin signer:", process.env.ADMIN === adminSigner.address);
 
     // Check deployer balance
     const deployerBalance = await ethers.provider.getBalance(deployerSigner.address);
@@ -87,6 +94,22 @@ const deployerSigner = new ethers.Wallet(
     const fFactoryV2Address = await fFactoryV2.getAddress();
     console.log("FFactoryV2 deployed to:", fFactoryV2Address);
     console.log("FFactoryV2 deployment completed successfully");
+    
+    // Check initial roles after deployment
+    console.log("Checking FFactoryV2 initial roles:");
+    const defaultAdminRole = await fFactoryV2.DEFAULT_ADMIN_ROLE();
+    const adminRole = await fFactoryV2.ADMIN_ROLE();
+    const creatorRole = await fFactoryV2.CREATOR_ROLE();
+    
+    console.log("DEFAULT_ADMIN_ROLE:", defaultAdminRole);
+    console.log("ADMIN_ROLE:", adminRole);
+    console.log("CREATOR_ROLE:", creatorRole);
+    
+    const deployerHasDefaultAdmin = await fFactoryV2.hasRole(defaultAdminRole, deployerSigner.address);
+    const contractControllerHasDefaultAdmin = await fFactoryV2.hasRole(defaultAdminRole, process.env.CONTRACT_CONTROLLER);
+    
+    console.log("Deployer has DEFAULT_ADMIN_ROLE:", deployerHasDefaultAdmin);
+    console.log("CONTRACT_CONTROLLER has DEFAULT_ADMIN_ROLE:", contractControllerHasDefaultAdmin);
 
     // 3. deploy fRouter
     console.log("Deploying FRouter...");
@@ -105,7 +128,40 @@ const deployerSigner = new ethers.Wallet(
 
     // Grant ADMIN_ROLE to admin before calling setRouter
     console.log("Granting ADMIN_ROLE to admin and setting router...");
-    await fFactoryV2.connect(deployerSigner).grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN);
+    console.log("Deployer address:", deployerSigner.address);
+    console.log("Admin address:", adminSigner.address);
+    console.log("ADMIN_ROLE:", await fFactoryV2.ADMIN_ROLE());
+    
+    // Check if deployer has DEFAULT_ADMIN_ROLE before trying to grant roles
+    const deployerCanGrant = await fFactoryV2.hasRole(await fFactoryV2.DEFAULT_ADMIN_ROLE(), deployerSigner.address);
+    console.log("Deployer can grant roles (has DEFAULT_ADMIN_ROLE):", deployerCanGrant);
+    
+    if (!deployerCanGrant) {
+      console.log("Deployer doesn't have DEFAULT_ADMIN_ROLE, trying to use CONTRACT_CONTROLLER...");
+      // Try to use CONTRACT_CONTROLLER to grant the role
+      const contractControllerSigner = new ethers.Wallet(
+        process.env.CONTRACT_CONTROLLER_PRIVATE_KEY!,
+        ethers.provider
+      );
+      const grantTx = await fFactoryV2.connect(contractControllerSigner).grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN);
+      console.log("Grant role transaction hash:", grantTx.hash);
+      await grantTx.wait();
+    } else {
+      const grantTx = await fFactoryV2.connect(deployerSigner).grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN);
+      console.log("Grant role transaction hash:", grantTx.hash);
+      await grantTx.wait(); // Wait for the transaction to be confirmed
+    }
+    
+    console.log("ADMIN_ROLE granted successfully");
+    
+    // Verify the role was granted
+    const hasRole = await fFactoryV2.hasRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN);
+    console.log("Admin has ADMIN_ROLE:", hasRole);
+    
+    if (!hasRole) {
+      throw new Error("ADMIN_ROLE was not granted successfully");
+    }
+    
     await fFactoryV2.connect(adminSigner).setRouter(fRouterAddress);
     console.log("fFactoryV2 set router to:", fRouterAddress);
     console.log("Router setup completed successfully");
