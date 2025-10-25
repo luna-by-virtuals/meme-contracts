@@ -1,18 +1,6 @@
 import { parseEther } from "ethers";
 import { ethers, upgrades } from "hardhat";
 
-// Gas configuration for BSC
-const GAS_CONFIG = {
-  gasPrice: ethers.parseUnits("10", "gwei"), // 10 gwei
-  gasLimit: 8000000, // 8M gas limit for deployments
-};
-
-// Optimized gas config for simple transactions
-const SIMPLE_TX_CONFIG = {
-  gasPrice: ethers.parseUnits("10", "gwei"), // 10 gwei
-  gasLimit: 200000, // 200k gas limit for simple transactions
-};
-
 
 const adminSigner = new ethers.Wallet(
   process.env.ADMIN_PRIVATE_KEY,
@@ -64,8 +52,6 @@ const deployerSigner = new ethers.Wallet(
       ],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER, // Proxy admin (can upgrade contract)
-        gasPrice: GAS_CONFIG.gasPrice,
-        gasLimit: GAS_CONFIG.gasLimit,
       }
     );
     console.log("TaxManager proxy deployment initiated, waiting for deployment...");
@@ -83,8 +69,7 @@ const deployerSigner = new ethers.Wallet(
       {
         creatorShare: process.env.CREATOR_SHARE,
         aigcShare: process.env.AIGC_SHARE,
-      },
-      SIMPLE_TX_CONFIG
+      }
     );
     console.log("TaxManager configs set successfully");
 
@@ -95,8 +80,6 @@ const deployerSigner = new ethers.Wallet(
       [taxManagerAddress, process.env.BONDING_TAX, process.env.BONDING_TAX],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER,
-        gasPrice: GAS_CONFIG.gasPrice,
-        gasLimit: GAS_CONFIG.gasLimit,
       }
     );
     console.log("FFactoryV2 proxy deployment initiated, waiting for deployment...");
@@ -112,8 +95,6 @@ const deployerSigner = new ethers.Wallet(
       [fFactoryV2Address, wbnbAddress],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER,
-        gasPrice: GAS_CONFIG.gasPrice,
-        gasLimit: GAS_CONFIG.gasLimit,
       }
     );
     console.log("FRouter proxy deployment initiated, waiting for deployment...");
@@ -124,8 +105,8 @@ const deployerSigner = new ethers.Wallet(
 
     // Grant ADMIN_ROLE to admin before calling setRouter
     console.log("Granting ADMIN_ROLE to admin and setting router...");
-    await fFactoryV2.connect(deployerSigner).grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN, SIMPLE_TX_CONFIG);
-    await fFactoryV2.connect(adminSigner).setRouter(fRouterAddress, SIMPLE_TX_CONFIG);
+    await fFactoryV2.connect(deployerSigner).grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN);
+    await fFactoryV2.connect(adminSigner).setRouter(fRouterAddress);
     console.log("fFactoryV2 set router to:", fRouterAddress);
     console.log("Router setup completed successfully");
 
@@ -141,8 +122,6 @@ const deployerSigner = new ethers.Wallet(
       ],
       {
         initialOwner: process.env.CONTRACT_CONTROLLER,
-        gasPrice: GAS_CONFIG.gasPrice,
-        gasLimit: GAS_CONFIG.gasLimit,
       }
     );
     console.log("LaunchpadV2 proxy deployment initiated, waiting for deployment...");
@@ -152,7 +131,7 @@ const deployerSigner = new ethers.Wallet(
     console.log("LaunchpadV2 deployment completed successfully");
 
     console.log("Setting launchpad in TaxManager...");
-    await taxManager.connect(adminSigner).setLaunchpad(launchpadV2Address, SIMPLE_TX_CONFIG);
+    await taxManager.connect(adminSigner).setLaunchpad(launchpadV2Address);
     console.log("taxManager set launchpad to:", launchpadV2Address);
     console.log("Launchpad set in TaxManager successfully");
 
@@ -182,17 +161,17 @@ const deployerSigner = new ethers.Wallet(
       process.env.UNISWAP_ROUTER,
       supplyParams,
       taxParams,
-    ], SIMPLE_TX_CONFIG);
+    ]);
     console.log("launchpadV2 setDeployParams successfully");
     console.log("Deploy params set successfully");
 
     console.log("Granting roles to LaunchpadV2...");
     await fFactoryV2
       .connect(deployerSigner)
-      .grantRole(await fFactoryV2.CREATOR_ROLE(), launchpadV2Address, SIMPLE_TX_CONFIG);
+      .grantRole(await fFactoryV2.CREATOR_ROLE(), launchpadV2Address);
     await fRouter
       .connect(deployerSigner)
-      .grantRole(await fRouter.EXECUTOR_ROLE(), launchpadV2Address, SIMPLE_TX_CONFIG);
+      .grantRole(await fRouter.EXECUTOR_ROLE(), launchpadV2Address);
     console.log("Roles granted successfully");
 
     // 5. Transfer business logic ownership to ADMIN
@@ -206,13 +185,12 @@ const deployerSigner = new ethers.Wallet(
     console.log("Transferring FFactoryV2 DEFAULT_ADMIN_ROLE...");
     await fFactoryV2
       .connect(deployerSigner)
-      .grantRole(await fFactoryV2.DEFAULT_ADMIN_ROLE(), process.env.ADMIN, SIMPLE_TX_CONFIG);
+      .grantRole(await fFactoryV2.DEFAULT_ADMIN_ROLE(), process.env.ADMIN);
     await fFactoryV2
       .connect(deployerSigner)
       .renounceRole(
         await fFactoryV2.DEFAULT_ADMIN_ROLE(),
-        process.env.DEPLOYER,
-        SIMPLE_TX_CONFIG
+        process.env.DEPLOYER
       );
     console.log(
       "FFactoryV2 DEFAULT_ADMIN_ROLE transferred to:",
@@ -223,10 +201,10 @@ const deployerSigner = new ethers.Wallet(
     console.log("Transferring FRouter DEFAULT_ADMIN_ROLE...");
     await fRouter
       .connect(deployerSigner)
-      .grantRole(await fRouter.DEFAULT_ADMIN_ROLE(), process.env.ADMIN, SIMPLE_TX_CONFIG);
+      .grantRole(await fRouter.DEFAULT_ADMIN_ROLE(), process.env.ADMIN);
     await fRouter
       .connect(deployerSigner)
-      .renounceRole(await fRouter.DEFAULT_ADMIN_ROLE(), process.env.DEPLOYER, SIMPLE_TX_CONFIG);
+      .renounceRole(await fRouter.DEFAULT_ADMIN_ROLE(), process.env.DEPLOYER);
     console.log(
       "FRouter DEFAULT_ADMIN_ROLE transferred to:",
       process.env.ADMIN
@@ -237,7 +215,7 @@ const deployerSigner = new ethers.Wallet(
     console.log("Transferring LaunchpadV2 ownership...");
     await launchpadV2
       .connect(deployerSigner)
-      .transferOwnership(process.env.ADMIN, SIMPLE_TX_CONFIG);
+      .transferOwnership(process.env.ADMIN);
     console.log("LaunchpadV2 ownership transferred to:", process.env.ADMIN);
     console.log("LaunchpadV2 ownership transfer completed");
 
@@ -306,6 +284,5 @@ const deployerSigner = new ethers.Wallet(
   } catch (e) {
     console.log("Error occurred during deployment:", e);
     console.log("Deployment failed with error:", e);
-    process.exit(1);
   }
 })();

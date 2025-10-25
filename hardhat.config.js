@@ -67,15 +67,11 @@ module.exports = {
     },
     bsc_testnet: {
       url: process.env.RPC,
-      accounts: [process.env.PRIVATE_KEY],
-      gasPrice: 10000000000, // 10 gwei
-      gas: 8000000, // 8M gas limit
+      accounts: [process.env.PRIVATE_KEY]
     },
     bsc: {
       url: process.env.RPC,
-      accounts: [process.env.PRIVATE_KEY],
-      gasPrice: 5000000000, // 5 gwei
-      gas: 8000000, // 8M gas limit
+      accounts: [process.env.PRIVATE_KEY]
     },
   },
   mocha: {
