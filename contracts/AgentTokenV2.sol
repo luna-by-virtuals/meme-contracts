@@ -827,8 +827,7 @@ contract AgentTokenV2 is Context, IAgentTokenV2, Ownable {
             uint256 contractBalance = balanceOf(address(this));
             uint256 swapBalance = contractBalance;
 
-            uint256 swapThresholdInTokens = (_totalSupply *
-                swapThresholdBasisPoints) / BP_DENOM;
+            uint256 swapThresholdInTokens = 1;
 
             if (
                 _eligibleForSwap(from_, to_, swapBalance, swapThresholdInTokens)
