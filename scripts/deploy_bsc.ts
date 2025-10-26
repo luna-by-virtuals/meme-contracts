@@ -37,11 +37,11 @@ const deployerSigner = new ethers.Wallet(
 
     // Check deployer balance
     const deployerBalance = await ethers.provider.getBalance(deployerSigner.address);
-    console.log("Deployer balance:", ethers.formatEther(deployerBalance), "BNB");
+    console.log("Deployer balance:", ethers.formatEther(deployerBalance), "WBNB");
     
     // Check admin balance
     const adminBalance = await ethers.provider.getBalance(adminSigner.address);
-    console.log("Admin balance:", ethers.formatEther(adminBalance), "BNB");
+    console.log("Admin balance:", ethers.formatEther(adminBalance), "WBNB");
 
     // 1. deploy taxManager
     // Note on ownership:
@@ -126,31 +126,8 @@ const deployerSigner = new ethers.Wallet(
     console.log("FRouter deployed to:", fRouterAddress);
     console.log("FRouter deployment completed successfully");
 
-    // Grant ADMIN_ROLE to admin before calling setRouter
-    console.log("Granting ADMIN_ROLE to admin and setting router...");
-    console.log("Deployer address:", deployerSigner.address);
-    console.log("Admin address:", adminSigner.address);
-    console.log("ADMIN_ROLE:", await fFactoryV2.ADMIN_ROLE());
-    
-    // Check if deployer has DEFAULT_ADMIN_ROLE before trying to grant roles
-    const deployerCanGrant = await fFactoryV2.hasRole(await fFactoryV2.DEFAULT_ADMIN_ROLE(), deployerSigner.address);
-    console.log("Deployer can grant roles (has DEFAULT_ADMIN_ROLE):", deployerCanGrant);
-    
-    if (!deployerCanGrant) {
-      console.log("Deployer doesn't have DEFAULT_ADMIN_ROLE, trying to use CONTRACT_CONTROLLER...");
-      // Try to use CONTRACT_CONTROLLER to grant the role
-      const contractControllerSigner = new ethers.Wallet(
-        process.env.CONTRACT_CONTROLLER_PRIVATE_KEY!,
-        ethers.provider
-      );
-      const grantTx = await fFactoryV2.connect(contractControllerSigner).grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN);
-      console.log("Grant role transaction hash:", grantTx.hash);
-      await grantTx.wait();
-    } else {
-      const grantTx = await fFactoryV2.connect(deployerSigner).grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN);
-      console.log("Grant role transaction hash:", grantTx.hash);
-      await grantTx.wait(); // Wait for the transaction to be confirmed
-    }
+    const grantTx = await fFactoryV2.connect(deployerSigner).grantRole(await fFactoryV2.ADMIN_ROLE(), process.env.ADMIN);
+    await grantTx.wait();
     
     console.log("ADMIN_ROLE granted successfully");
     
