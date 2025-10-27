@@ -333,6 +333,11 @@ contract LaunchpadV2 is
 
         factory.graduate(tokenAddress);
 
+        address[] memory pools = IAgentTokenV2(tokenAddress).liquidityPools();
+        if (pools.length > 0) {
+            _token.pair = pools[0];  // Set to PancakeSwap pair
+        }
+
         emit Graduated(tokenAddress);
     }
 }
