@@ -17,6 +17,7 @@ module.exports = {
         enabled: true,
         runs: 200,
       },
+      viaIR: true,
     },
   },
   namedAccounts: {
@@ -73,6 +74,10 @@ module.exports = {
       url: process.env.RPC,
       accounts: [process.env.PRIVATE_KEY]
     },
+    localhost: {
+      url: "http://127.0.0.1:8545/", // Default Hardhat Network URL
+      chainId: 31337, // Default Hardhat Network chain ID
+    }
   },
   mocha: {
     timeout: 100000000,

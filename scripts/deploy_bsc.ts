@@ -27,6 +27,7 @@ const deployerSigner = new ethers.Wallet(
     console.log("- AIGC_VAULT:", process.env.AIGC_VAULT);
     console.log("- BONDING_REWARD:", process.env.BONDING_REWARD);
     console.log("- RPC:", process.env.RPC);
+    console.log("- USDC:", process.env.USDC);
     
     // Verify that deployer and admin addresses match the signers
     console.log("Signer verification:");
@@ -79,6 +80,15 @@ const deployerSigner = new ethers.Wallet(
       }
     );
     console.log("TaxManager configs set successfully");
+
+    // Configure swap addresses (optional - only if provided)
+    console.log("Setting PancakeSwap router...");
+    await taxManager.connect(adminSigner).setPancakeSwapRouter(process.env.UNISWAP_ROUTER);
+    console.log("PancakeSwap router set to:", process.env.UNISWAP_ROUTER);
+
+    console.log("Setting USDC token address...");
+    await taxManager.connect(adminSigner).setUsdcToken(process.env.USDC);
+    console.log("USDC token set to:", process.env.USDC);
 
     // 2. deploy fFactoryV2
     console.log("Deploying FFactoryV2...");
@@ -179,6 +189,7 @@ const deployerSigner = new ethers.Wallet(
         launchpadV2Address,
       ]
     );
+    console.log("Supply params:", supplyParams);
     const taxParams = abiCoder.encode(
       ["uint256", "uint256", "uint256", "address"],
       [
@@ -188,6 +199,7 @@ const deployerSigner = new ethers.Wallet(
         taxManagerAddress,
       ]
     );
+    console.log("Tax params:", taxParams);
     console.log("Setting deploy params for LaunchpadV2...");
     await launchpadV2.connect(deployerSigner).setDeployParams([
       process.env.ADMIN,
@@ -267,51 +279,20 @@ const deployerSigner = new ethers.Wallet(
     console.log("Generating verification commands...");
     console.log("\n=== Verify Script by running below script ===");
     console.log(
-      "npx hardhat verify --network bsc_testnet <contract_address> <constructor_arguments>"
+      "npx hardhat verify --network bsc_testnet ",
+      taxManagerAddress
     );
     console.log(
       "npx hardhat verify --network bsc_testnet ",
-      taxManagerAddress,
-      " ",
-      process.env.ADMIN,
-      " ",
-      wbnbAddress,
-      " ",
-      process.env.AIGC_VAULT,
-      " ",
-      process.env.TREASURY,
-      " ",
-      process.env.BONDING_REWARD
+      fFactoryV2Address
     );
     console.log(
       "npx hardhat verify --network bsc_testnet ",
-      fFactoryV2Address,
-      " ",
-      taxManagerAddress,
-      " ",
-      process.env.BONDING_TAX,
-      " ",
-      process.env.BONDING_TAX
+      fRouterAddress
     );
     console.log(
       "npx hardhat verify --network bsc_testnet ",
-      fRouterAddress,
-      " ",
-      fFactoryV2Address,
-      " ",
-      wbnbAddress
-    );
-    console.log(
-      "npx hardhat verify --network bsc_testnet ",
-      launchpadV2Address,
-      " ",
-      fFactoryV2Address,
-      " ",
-      fRouterAddress,
-      " ",
-      process.env.TOKEN_INITIAL_SUPPLY,
-      " ",
-      parseEther(process.env.GRAD_THRESHOLD!)
+      launchpadV2Address
     );
     console.log("Verification commands generated successfully");
   } catch (e) {
