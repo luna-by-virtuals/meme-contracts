@@ -67,11 +67,11 @@ module.exports = {
     },
     bsc_testnet: {
       url: process.env.RPC,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY]
     },
     bsc: {
       url: process.env.RPC,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.PRIVATE_KEY]
     },
   },
   mocha: {
