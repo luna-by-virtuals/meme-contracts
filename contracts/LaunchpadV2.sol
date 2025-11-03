@@ -71,6 +71,8 @@ contract LaunchpadV2 is
     mapping(address => Token) public tokenInfo;
     address[] public tokenInfos;
 
+    mapping(bytes32 => bool) public tickerExists;
+
     event Launched(address indexed token, address indexed pair, uint);
     event Deployed(address indexed token, uint256 amount0, uint256 amount1);
     event Graduated(address indexed token);
@@ -140,6 +142,11 @@ contract LaunchpadV2 is
         uint256 initialPurchase,
         bytes32 salt
     ) public nonReentrant returns (address, address, uint) {
+        // check if ticker already exists
+        bytes32 tickerHash = keccak256(abi.encodePacked(_ticker));
+        require(!tickerExists[tickerHash],'Ticker already exists');
+        tickerExists[tickerHash] = true;
+
         address assetToken = router.assetToken();
 
         IERC20(assetToken).safeTransferFrom(
