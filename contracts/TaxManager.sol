@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./ITaxManager.sol";
 import "./Launchpad.sol";
+import "./pool/IUniswapV2Router02.sol";
 
 contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
@@ -22,6 +23,10 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     address public launchpadRouter;
     address public treasury;
     address public aigcVault;
+
+    // Swap configuration
+    address public pancakeswapRouter;
+    address public usdcToken; // USDC address on BSC
 
     mapping(address recipient => uint256 amount) public taxes;
     mapping(address token => uint256 amount) public aigcTaxes;
@@ -131,6 +136,14 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         _distributeTaxes(token, amount, !isGraduated[token]);
     }
 
+    function recordTax(
+        address token,
+        uint256 amount
+    ) external {
+        require(msg.sender == token, "Only token can call this function.");
+        _distributeTaxes(token, amount, false);
+    }
+
     function setBondingReward(uint256 bondingReward_) external onlyOwner {
         bondingReward = bondingReward_;
     }
@@ -153,7 +166,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         }
 
         if (aigcShare > 0) {
-            taxes[aigcVault] += aigcShare;
+            taxes[token] += aigcShare;
             emit ReceivedTaxAIGC(token, aigcShare, isBonding);
         }
 
@@ -178,11 +191,6 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         emit BondingReward(token, creator, bondingReward);
     }
 
-    function recordTax(address token, uint256 amount) external {
-        require(msg.sender == token, "Only token can call this function.");
-        _distributeTaxes(token, amount, false);
-    }
-
     function claimTax(uint256 amount) external {
         uint256 claimable = taxes[msg.sender];
         require(claimable >= amount, "Insufficient tax to claim.");
@@ -202,5 +210,61 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         taxes[oldCreator] = 0;
         taxes[creator] += oldBalance;
         emit CreatorSet(token, creator);
+    }
+
+    function setPancakeSwapRouter(address router_) external onlyOwner {
+        require(router_ != address(0), "Zero addresses are not allowed.");
+        pancakeswapRouter = router_;
+    }
+
+    function setUsdcToken(address usdc_) external onlyOwner {
+        require(usdc_ != address(0), "Zero addresses are not allowed.");
+        usdcToken = usdc_;
+    }
+
+    function claimTaxByToken(
+        address token,
+        address recipient,
+        uint256 amount
+    ) external onlyOwner returns (uint256) {
+        require(recipient != address(0), "Zero addresses are not allowed.");
+        require(pancakeswapRouter != address(0), "PancakeSwap router not set.");
+        require(usdcToken != address(0), "USDC token not set.");
+
+        uint256 claimable = taxes[token];
+        require(claimable >= amount, "Insufficient tax to claim.");
+        taxes[token] -= amount;
+
+        IERC20(assetToken).safeTransfer(address(this), amount);
+
+        uint256 usdcAmount = _swapWbnbToUsdc(amount);
+
+        IERC20(usdcToken).safeTransfer(recipient, usdcAmount);
+
+        emit ClaimedTax(recipient, usdcAmount);
+        return usdcAmount;
+    }
+
+    function _swapWbnbToUsdc(uint256 wbnbAmount) internal returns (uint256) {
+        IERC20(assetToken).forceApprove(pancakeswapRouter, wbnbAmount);
+
+        address[] memory path = new address[](2);
+        path[0] = assetToken; // WBNB
+        path[1] = usdcToken; // USDC
+
+        uint256[] memory amountsOut = IUniswapV2Router02(pancakeswapRouter)
+            .getAmountsOut(wbnbAmount, path);
+        uint256 minAmountOut = (amountsOut[1] * 99) / 100; //1% slippage
+
+        uint256[] memory amounts = IUniswapV2Router02(pancakeswapRouter)
+            .swapExactTokensForTokens(
+                wbnbAmount,
+                minAmountOut,
+                path,
+                address(this),
+                block.timestamp + 300 // 5 minute deadline
+            );
+
+        return amounts[1]; // Return USDC amount received
     }
 }
