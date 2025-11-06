@@ -233,10 +233,14 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
 
         uint256 claimable = taxes[token];
         require(claimable >= amount, "Insufficient tax to claim.");
+        
+        // Verify contract has enough WBNB balance (received from tax swaps)
+        uint256 contractBalance = IERC20(assetToken).balanceOf(address(this));
+        require(contractBalance >= amount, "Insufficient contract WBNB balance.");
+        
         taxes[token] -= amount;
 
-        IERC20(assetToken).safeTransfer(address(this), amount);
-
+        // Swap WBNB to USDC
         uint256 usdcAmount = _swapWbnbToUsdc(amount);
 
         IERC20(usdcToken).safeTransfer(recipient, usdcAmount);

@@ -8,7 +8,7 @@ const adminSigner = new ethers.Wallet(
 );
 
 const deployerSigner = new ethers.Wallet(
-  process.env.PRIVATE_KEY,
+  process.env.DEPLOYER_PRIVATE_KEY,
   ethers.provider
 );
 
@@ -167,6 +167,7 @@ const deployerSigner = new ethers.Wallet(
         initialOwner: process.env.CONTRACT_CONTROLLER,
       }
     );
+    console.log("LaunchpadV2 gradThreshold:", parseEther(process.env.GRAD_THRESHOLD!));
     console.log("LaunchpadV2 proxy deployment initiated, waiting for deployment...");
     await launchpadV2.waitForDeployment();
     const launchpadV2Address = await launchpadV2.getAddress();
@@ -279,19 +280,19 @@ const deployerSigner = new ethers.Wallet(
     console.log("Generating verification commands...");
     console.log("\n=== Verify Script by running below script ===");
     console.log(
-      "npx hardhat verify --network bsc_testnet ",
+      "npx hardhat verify --network bsc",
       taxManagerAddress
     );
     console.log(
-      "npx hardhat verify --network bsc_testnet ",
+      "npx hardhat verify --network bsc",
       fFactoryV2Address
     );
     console.log(
-      "npx hardhat verify --network bsc_testnet ",
+      "npx hardhat verify --network bsc",
       fRouterAddress
     );
     console.log(
-      "npx hardhat verify --network bsc_testnet ",
+      "npx hardhat verify --network bsc",
       launchpadV2Address
     );
     console.log("Verification commands generated successfully");
