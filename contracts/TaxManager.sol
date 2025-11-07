@@ -206,6 +206,10 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         emit BondingReward(token, creator, bondingReward);
     }
 
+    function setGraduated(address token, bool isGraduated) external onlyOwner {
+        graduatedTokens[token] = isGraduated;
+    }
+
     function recordTax(address token, uint256 amount) external {
         require(msg.sender == token, "Only token can call this function.");
         require(graduatedTokens[token] == true, "Token is not graduated.");
