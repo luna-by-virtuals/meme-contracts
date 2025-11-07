@@ -234,6 +234,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable, Reentranc
 
         creators[token] = creator;
         if (oldBalance > 0) {
+            taxes[oldCreator] = 0;
             taxes[creator] += oldBalance;
         }
         emit CreatorSet(token, creator);
