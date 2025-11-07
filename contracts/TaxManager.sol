@@ -180,10 +180,6 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable, Reentranc
         bool isBonding
     ) internal {
         TaxConfig memory config = isBonding ? bondingTaxConfig : taxConfig;
-        require(
-            config.creatorShare + config.aigcShare <= DENOM,
-            "Invalid tax config: shares exceed 100%"
-        );
 
         uint256 creatorShare = (amount * config.creatorShare) / DENOM;
         uint256 aigcShare = (amount * config.aigcShare) / DENOM;
@@ -237,8 +233,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable, Reentranc
         uint256 oldBalance = taxes[oldCreator];
 
         creators[token] = creator;
-        if (oldCreator != address(0) && oldBalance > 0) {
-            taxes[oldCreator] = 0;
+        if (oldBalance > 0) {
             taxes[creator] += oldBalance;
         }
         emit CreatorSet(token, creator);
