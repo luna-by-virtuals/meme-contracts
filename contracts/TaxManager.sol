@@ -147,6 +147,15 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable, Reentranc
         address token,
         uint256 amount
     ) external onlyLaunchpadRouter {
+        uint256 currentBalance = IERC20(assetToken).balanceOf(address(this));
+        uint256 newTotalRecorded = _totalRecordedTax + amount;
+
+        require(
+            newTotalRecorded <= currentBalance + _totalClaimedTax,
+            "Recorded tax cannot exceed actual balance plus claims."
+        );
+
+        _totalRecordedTax = newTotalRecorded;
         _distributeTaxes(token, amount, !isGraduated[token]);
     }
 
