@@ -14,8 +14,8 @@ import "./FRouter.sol";
 
 contract LaunchpadV2 is
     Initializable,
-    ReentrancyGuardUpgradeable,
-    OwnableUpgradeable
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable
 {
     using SafeERC20 for IERC20;
 
