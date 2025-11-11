@@ -1,6 +1,7 @@
 /** @type import('hardhat/config').HardhatUserConfig */
 require("dotenv").config();
 require("@nomicfoundation/hardhat-toolbox");
+require("@nomicfoundation/hardhat-verify");
 require("hardhat-deploy");
 require("@openzeppelin/hardhat-upgrades");
 require("@fireblocks/hardhat-fireblocks");
@@ -21,7 +22,7 @@ module.exports = {
     },
   },
   namedAccounts: {
-    deployer: `privatekey://${process.env.PRIVATE_KEY}`,
+    deployer: `privatekey://${process.env.DEPLOYER_PRIVATE_KEY}`,
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
@@ -47,11 +48,11 @@ module.exports = {
   networks: {
     eth: {
       url: process.env.RPC,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
     },
     eth_fire: {
       url: process.env.RPC,
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
       fireblocks: {
         privateKey: process.env.FIREBLOCKS_API_PRIVATE_KEY_PATH,
         apiKey: process.env.FIREBLOCKS_API_KEY,
@@ -60,7 +61,7 @@ module.exports = {
     },
     sepolia: {
       url: "https://sepolia.drpc.org",
-      accounts: [process.env.PRIVATE_KEY],
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY],
     },
     local: {
       url: "http://127.0.0.1:8545",
@@ -68,11 +69,11 @@ module.exports = {
     },
     bsc_testnet: {
       url: process.env.RPC,
-      accounts: [process.env.PRIVATE_KEY]
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY]
     },
     bsc: {
       url: process.env.RPC,
-      accounts: [process.env.PRIVATE_KEY]
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY]
     },
     localhost: {
       url: "http://127.0.0.1:8545/", // Default Hardhat Network URL

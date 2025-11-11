@@ -19,7 +19,6 @@ contract AgentTokenV2 is Context, IAgentTokenV2, Ownable {
     uint256 internal constant BP_DENOM = 1000000;
     uint256 internal constant ROUND_DEC = 100000000000;
     uint256 internal constant CALL_GAS_LIMIT = 50000;
-    uint256 internal constant MAX_SWAP_THRESHOLD_MULTIPLE = 20;
 
     address public uniswapV2Pair;
     uint256 public botProtectionDurationInSeconds;
@@ -825,28 +824,17 @@ contract AgentTokenV2 is Context, IAgentTokenV2, Ownable {
     function _autoSwap(address from_, address to_) internal {
         if (_tokenHasTax) {
             uint256 contractBalance = balanceOf(address(this));
-            uint256 swapBalance = contractBalance;
-
             uint256 swapThresholdInTokens = (_totalSupply *
                 swapThresholdBasisPoints) / BP_DENOM;
 
             if (
-                _eligibleForSwap(from_, to_, swapBalance, swapThresholdInTokens)
+                _eligibleForSwap(from_, to_, contractBalance, swapThresholdInTokens)
             ) {
                 // Store that a swap back is in progress:
                 _autoSwapInProgress = true;
-                // Check if we need to reduce the amount of tokens for this swap:
-                if (
-                    swapBalance >
-                    swapThresholdInTokens * MAX_SWAP_THRESHOLD_MULTIPLE
-                ) {
-                    swapBalance =
-                        swapThresholdInTokens *
-                        MAX_SWAP_THRESHOLD_MULTIPLE;
-                }
 
                 // Perform the auto swap to pair token
-                _swapTax(swapBalance, contractBalance);
+                _swapTax(contractBalance);
                 // Flag that the autoswap is complete:
                 _autoSwapInProgress = false;
             }
@@ -883,9 +871,8 @@ contract AgentTokenV2 is Context, IAgentTokenV2, Ownable {
      * Swap tokens taken as tax for pair token
      *
      * @param swapBalance_ The current accumulated tax balance to swap
-     * @param contractBalance_ The current accumulated total tax balance
      */
-    function _swapTax(uint256 swapBalance_, uint256 contractBalance_) internal {
+    function _swapTax(uint256 swapBalance_) internal {
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = pairToken;
@@ -914,28 +901,8 @@ contract AgentTokenV2 is Context, IAgentTokenV2, Ownable {
                     amountOut
                 );
             }
-            // We will not have swapped all tax tokens IF the amount was greater than the max auto swap.
-            // We therefore cannot just set the pending swap counters to 0. Instead, in this scenario,
-            // we must reduce them in proportion to the swap amount vs the remaining balance + swap
-            // amount.
-            //
-            // For example:
-            //  * swap Balance is 250
-            //  * contract balance is 385.
-            //  * projectTaxPendingSwap is 300
-            //
-            // The new total for the projectTaxPendingSwap is:
-            //   = 300 - ((300 * 250) / 385)
-            //   = 300 - 194
-            //   = 106
-
-            if (swapBalance_ < contractBalance_) {
-                projectTaxPendingSwap -= uint128(
-                    (projectTaxPendingSwap * swapBalance_) / contractBalance_
-                );
-            } else {
-                projectTaxPendingSwap = 0;
-            }
+            // Since we're swapping the full contract balance, reset the pending swap counter
+            projectTaxPendingSwap = 0;
         } catch {
             // Dont allow a failed external call (in this case to uniswap) to stop a transfer.
             // Emit that this has occured and continue.

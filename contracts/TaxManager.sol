@@ -5,11 +5,12 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "./ITaxManager.sol";
 import "./Launchpad.sol";
 import "./pool/IUniswapV2Router02.sol";
 
-contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
+contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using SafeERC20 for IERC20;
 
     struct TaxConfig {
@@ -64,6 +65,8 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     TaxConfig public taxConfig;
 
     uint256 public constant DENOM = 10000;
+    uint256 _totalRecordedTax;
+    uint256 _totalClaimedTax;
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -91,6 +94,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         require(treasury_ != address(0), "Zero addresses are not allowed.");
 
         __Ownable_init(owner);
+        __ReentrancyGuard_init();
         assetToken = assetToken_;
         aigcVault = aigcVault_;
         treasury = treasury_;
@@ -117,13 +121,23 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         TaxConfig memory bondingTaxConfig_,
         TaxConfig memory taxConfig_
     ) external onlyOwner {
+        require(
+            bondingTaxConfig_.creatorShare + bondingTaxConfig_.aigcShare <= DENOM,
+            "Bonding tax config exceeds 100%"
+        );
+        require(
+            taxConfig_.creatorShare + taxConfig_.aigcShare <= DENOM,
+            "Tax config exceeds 100%"
+        );
         bondingTaxConfig = bondingTaxConfig_;
         taxConfig = taxConfig_;
     }
 
     function _getCreator(address token) internal returns (address) {
         if (creators[token] == address(0)) {
+            require(address(launchpad) != address(0), "Launchpad not set.");
             (address creator, , , , , , , , , , ) = launchpad.tokenInfo(token);
+            require(creator != address(0), "Creator not found for token.");
             creators[token] = creator;
         }
         return creators[token];
@@ -133,6 +147,15 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         address token,
         uint256 amount
     ) external onlyLaunchpadRouter {
+        uint256 currentBalance = IERC20(assetToken).balanceOf(address(this));
+        uint256 newTotalRecorded = _totalRecordedTax + amount;
+
+        require(
+            newTotalRecorded <= currentBalance + _totalClaimedTax,
+            "Recorded tax cannot exceed actual balance plus claims."
+        );
+
+        _totalRecordedTax = newTotalRecorded;
         _distributeTaxes(token, amount, !isGraduated[token]);
     }
 
@@ -141,6 +164,18 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         uint256 amount
     ) external {
         require(msg.sender == token, "Only token can call this function.");
+        require(isGraduated[token], "Token has not graduated.");
+        require(amount > 0, "Amount must be greater than zero.");
+        
+        uint256 currentBalance = IERC20(assetToken).balanceOf(address(this));
+        uint256 newTotalRecorded = _totalRecordedTax + amount;
+
+        require(
+            newTotalRecorded <= currentBalance + _totalClaimedTax,
+            "Recorded tax cannot exceed actual balance plus claims."
+        );
+        
+        _totalRecordedTax = newTotalRecorded;
         _distributeTaxes(token, amount, false);
     }
 
@@ -179,24 +214,24 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     function graduate(address token) external onlyLaunchpadRouter {
         require(!isGraduated[token], "Token already graduated.");
         isGraduated[token] = true;
-        address creator = _getCreator(token);
-        require(
-            taxes[treasury] >= bondingReward,
-            "Insufficient treasury balance for bonding reward"
-        );
-
-        taxes[creator] += bondingReward;
-        taxes[treasury] -= bondingReward;
-
-        emit BondingReward(token, creator, bondingReward);
     }
 
-    function claimTax(uint256 amount) external {
+    function claimTax(uint256 amount) external nonReentrant {
+        require(amount > 0, "Amount must be greater than zero.");
+        
         uint256 claimable = taxes[msg.sender];
         require(claimable >= amount, "Insufficient tax to claim.");
 
+        uint256 balanceBefore = IERC20(assetToken).balanceOf(address(this));
+        require(balanceBefore >= amount, "Insufficient contract balance.");
+
         taxes[msg.sender] -= amount;
         IERC20(assetToken).safeTransfer(msg.sender, amount);
+        
+        uint256 balanceAfter = IERC20(assetToken).balanceOf(address(this));
+        require(balanceAfter == balanceBefore - amount, "Balance mismatch detected.");
+        
+        _totalClaimedTax += amount;
         emit ClaimedTax(msg.sender, amount);
     }
 
@@ -207,8 +242,10 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         uint256 oldBalance = taxes[oldCreator];
 
         creators[token] = creator;
-        taxes[oldCreator] = 0;
-        taxes[creator] += oldBalance;
+        if (oldBalance > 0) {
+            taxes[oldCreator] = 0;
+            taxes[creator] += oldBalance;
+        }
         emit CreatorSet(token, creator);
     }
 
@@ -226,18 +263,26 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         address token,
         address recipient,
         uint256 amount
-    ) external onlyOwner returns (uint256) {
+    ) external onlyOwner nonReentrant returns (uint256) {
         require(recipient != address(0), "Zero addresses are not allowed.");
         require(pancakeswapRouter != address(0), "PancakeSwap router not set.");
         require(usdcToken != address(0), "USDC token not set.");
+        require(amount > 0, "Amount must be greater than zero.");
 
         uint256 claimable = taxes[token];
         require(claimable >= amount, "Insufficient tax to claim.");
+        
+        // Verify contract has enough WBNB balance (received from tax swaps)
+        uint256 balanceBefore = IERC20(assetToken).balanceOf(address(this));
+        require(balanceBefore >= amount, "Insufficient contract WBNB balance.");
+        
         taxes[token] -= amount;
-
-        IERC20(assetToken).safeTransfer(address(this), amount);
+        _totalClaimedTax += amount;
 
         uint256 usdcAmount = _swapWbnbToUsdc(amount);
+        
+        uint256 balanceAfter = IERC20(assetToken).balanceOf(address(this));
+        require(balanceAfter == balanceBefore - amount, "Balance mismatch detected.");
 
         IERC20(usdcToken).safeTransfer(recipient, usdcAmount);
 
