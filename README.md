@@ -40,15 +40,15 @@ Luna delivers meme videos — your meme project will likely quote-repost it.
 ## Contract Addresses
 
 **BNB Mainnet**
-- TaxManager: TBD
-- FFactoryV2: TBD
-- FRouter: TBD
-- LaunchpadV2: TBD
+- TaxManager : 0x061aD83969a6F9864f02265FB1ff103DDBCA5cDB
+- FFactoryV2 : 0x9dcA45bB086567Fed5CCe0d6Bd2BF2Cf8AEa8610
+- FRouter    : 0xFFD06D49A8ed58EC38D81C84590a6507e208C8D9
+- LaunchpadV2: 0x7fdC3c5c4eC798150462D040526B6A89190b459c
 
 **BNB Testnet**
-- TaxManager: 0xB628636d87332B9722d734e59dFe833d6cB7e1B6
-- FFactoryV2: 0xd4aDf97d7Fc2051Ae9b8881F59f21D4D1B8e6036
-- FRouter: 0xd957bcccbF8CF17559E234d8a07182D1c63e40DE
+- TaxManager : 0xB628636d87332B9722d734e59dFe833d6cB7e1B6
+- FFactoryV2 : 0xd4aDf97d7Fc2051Ae9b8881F59f21D4D1B8e6036
+- FRouter    : 0xd957bcccbF8CF17559E234d8a07182D1c63e40DE
 - LaunchpadV2: 0xF448B98d9d6c75b82fA339F0c3Ebf789660C3BBF
 
 
