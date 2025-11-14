@@ -224,6 +224,16 @@ contract AgentTokenV2 is Context, IAgentTokenV2, Ownable {
     }
 
     /**
+     * @dev Override renounceOwnership to allow factory to also renounce
+     */
+    function renounceOwnership() public virtual override {
+        if (_msgSender() != owner() && _msgSender() != _factory) {
+            revert CallerIsNotAdminNorFactory();
+        }
+        _transferOwnership(address(0));
+    }
+
+    /**
      * @dev function {addInitialLiquidity}
      *
      * Add initial liquidity to the uniswap pair
