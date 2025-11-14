@@ -129,6 +129,9 @@ contract FFactoryV2 is
 
         AgentTokenV2(address(token)).addBlacklistAddress(IAgentTokenV2(token).liquidityPools()[0]);
 
+        // Renounce ownership of the token
+        AgentTokenV2(address(token)).renounceOwnership();
+
         return address(token);
     }
 
