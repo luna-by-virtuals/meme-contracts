@@ -38,11 +38,11 @@ const deployerSigner = new ethers.Wallet(
 
     // Check deployer balance
     const deployerBalance = await ethers.provider.getBalance(deployerSigner.address);
-    console.log("Deployer balance:", ethers.formatEther(deployerBalance), "WBNB");
+    console.log("Deployer balance:", ethers.formatEther(deployerBalance), "BNB");
     
     // Check admin balance
     const adminBalance = await ethers.provider.getBalance(adminSigner.address);
-    console.log("Admin balance:", ethers.formatEther(adminBalance), "WBNB");
+    console.log("Admin balance:", ethers.formatEther(adminBalance), "BNB");
 
     // 1. deploy taxManager
     // Note on ownership:
