@@ -234,8 +234,4 @@ interface IAgentTokenV2 is
      * `value`.
      */
     function burnFrom(address account, uint256 value) external;
-
-    function addBlacklistAddress(address addr) external;
-
-    function removeBlacklistAddress(address addr) external;
 }

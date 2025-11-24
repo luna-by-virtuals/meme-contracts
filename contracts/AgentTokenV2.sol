@@ -53,8 +53,7 @@ contract AgentTokenV2 is Context, IAgentTokenV2, Ownable {
     /** @dev {_liquidityPools} Enumerable set for liquidity pool addresses */
     EnumerableSet.AddressSet private _liquidityPools;
 
-    address private _factory;
-
+    address public _factory;
     mapping(address => bool) public blacklists;
 
     modifier onlyOwnerOrFactory() {
@@ -1125,15 +1124,7 @@ contract AgentTokenV2 is Context, IAgentTokenV2, Ownable {
         address from,
         address to,
         uint256 amount
-    ) internal virtual {
-        // Skip blacklist check for mint (from == address(0)) and burn (to == address(0)) operations
-        if (from != address(0) && to != address(0)) {
-            // Check if the recipient is blacklisted
-            if (blacklists[to]) {
-                revert TransferToBlacklistedAddress();
-            }
-        }
-    }
+    ) internal virtual {}
 
     /**
      * @dev Hook that is called after any transfer of tokens. This includes
@@ -1154,4 +1145,20 @@ contract AgentTokenV2 is Context, IAgentTokenV2, Ownable {
         address to,
         uint256 amount
     ) internal virtual {}
+
+    /**
+     * @dev function {renounceFactory}
+     *
+     * Allows the factory to renounce its role, setting the factory address to zero.
+     * This can only be called by the current factory.
+     */
+    function renounceFactory() external onlyOwnerOrFactory {
+        if (_msgSender() != _factory) {
+            revert CallerIsNotAdminNorFactory();
+        }
+        _factory = address(0);
+    }
+
+
+
 }

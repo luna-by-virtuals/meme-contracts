@@ -105,7 +105,6 @@ The contracts use generic Uniswap V2-compatible interfaces (`IUniswapV2Router02`
 - `_taxProcessing()`: Applies buy/sell taxes based on liquidity pool interactions
 - `_autoSwap()`: Automatically swaps accumulated taxes to pair token
 - `addInitialLiquidity()`: Adds liquidity to DEX pair (Uniswap/PancakeSwap) after graduation
-- `addBlacklistAddress()` / `removeBlacklistAddress()`: Manages blacklist during bonding phase
 
 **Tax Mechanics**:
 - Buy tax: Applied when tokens are received from a liquidity pool

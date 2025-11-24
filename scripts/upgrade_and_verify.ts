@@ -75,10 +75,10 @@ console.log("Proxy admin signer address:", proxyContractController.address);
     await upgradeContract(fRouterProxyAddress, "FRouter");
     await upgradeContract(launchpadProxyAddress, "LaunchpadV2");
 
-    await verifyContract(taxManagerProxyAddress, "TaxManager");
-    await verifyContract(fFactoryProxyAddress, "FFactoryV2");
-    await verifyContract(fRouterProxyAddress, "FRouter");
-    await verifyContract(launchpadProxyAddress, "LaunchpadV2");
+    // await verifyContract(taxManagerProxyAddress, "TaxManager");
+    // await verifyContract(fFactoryProxyAddress, "FFactoryV2");
+    // await verifyContract(fRouterProxyAddress, "FRouter");
+    // await verifyContract(launchpadProxyAddress, "LaunchpadV2");
 
     // await upgradeContract(taxManagerProxyAddress, "AgentTokenV2");
     // await verifyContract(fRouterProxyAddress, "AgentTokenV2");

@@ -26,6 +26,8 @@ contract FFactoryV2 is
     uint256 public sellTax;
     address public taxVault;
 
+    uint256 public testCount;
+
     event PairCreated(
         address indexed tokenA,
         address indexed tokenB,
@@ -139,5 +141,6 @@ contract FFactoryV2 is
         AgentTokenV2(tokenAddress).removeBlacklistAddress(IAgentTokenV2(tokenAddress).liquidityPools()[0]);
 
         AgentTokenV2(tokenAddress).addInitialLiquidity(address(0));
+        AgentTokenV2(tokenAddress).renounceFactory();
     }
 }
