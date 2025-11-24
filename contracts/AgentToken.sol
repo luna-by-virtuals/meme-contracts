@@ -27,8 +27,8 @@ contract AgentToken is Context, IAgentToken, Ownable {
     IUniswapV2Router02 internal _uniswapRouter;
 
     uint32 public fundedDate;
-    uint16 public projectBuyTaxBasisPoints;
-    uint16 public projectSellTaxBasisPoints;
+    uint32 public projectBuyTaxBasisPoints;
+    uint32 public projectSellTaxBasisPoints;
     uint16 public swapThresholdBasisPoints;
     address public pairToken; // The token used to trade for this token
 
@@ -133,7 +133,7 @@ contract AgentToken is Context, IAgentToken, Ownable {
             revert SupplyTotalMismatch();
         }
 
-        if (erc20SupplyParameters_.maxSupply > type(uint128).max) {
+       if (erc20SupplyParameters_.maxSupply > type(uint128).max / 1e18) {
             revert MaxSupplyTooHigh();
         }
 
@@ -161,10 +161,10 @@ contract AgentToken is Context, IAgentToken, Ownable {
         ) {
             return false;
         } else {
-            projectBuyTaxBasisPoints = uint16(
+            projectBuyTaxBasisPoints = uint32(
                 erc20TaxParameters_.projectBuyTaxBasisPoints
             );
-            projectSellTaxBasisPoints = uint16(
+            projectSellTaxBasisPoints = uint32(
                 erc20TaxParameters_.projectSellTaxBasisPoints
             );
             return true;
@@ -249,7 +249,7 @@ contract AgentToken is Context, IAgentToken, Ownable {
         // approvals on tax swaps, as the uniswap router allowance will never
         // be decreased (see code in decreaseAllowance for reference)
         _approve(address(this), address(_uniswapRouter), type(uint256).max);
-        IERC20(pairToken).approve(address(_uniswapRouter), type(uint256).max);
+        IERC20(pairToken).forceApprove(address(_uniswapRouter), type(uint256).max);
         // Add the liquidity:
 
         address pairAddr = IUniswapV2Factory(_uniswapRouter.factory()).getPair(
@@ -261,14 +261,11 @@ contract AgentToken is Context, IAgentToken, Ownable {
         uint256 amountB = IERC20(pairToken).balanceOf(address(this));
 
         _transfer(address(this), pairAddr, amountA, false);
-        IERC20(pairToken).transfer(pairAddr, amountB);
+        IERC20(pairToken).safeTransfer(pairAddr, amountB);
 
         uint256 lpTokens = IUniswapV2Pair(pairAddr).mint(address(this));
 
         emit InitialLiquidityAdded(amountA, amountB, lpTokens);
-
-        // We now set this to false so that future transactions can be eligibile for autoswaps
-        _autoSwapInProgress = false;
 
         IERC20(uniswapV2Pair).transfer(lpOwner, lpTokens);
     }
@@ -345,62 +342,6 @@ contract AgentToken is Context, IAgentToken, Ownable {
     }
 
     /**
-     * @dev function {isValidCaller}
-     *
-     * Return if an address is a valid caller
-     *
-     * @param queryHash_ The code hash being queried
-     * @return bool The address is / isn't a valid caller
-     */
-    function isValidCaller(bytes32 queryHash_) public view returns (bool) {
-        return (_validCallerCodeHashes.contains(queryHash_));
-    }
-
-    /**
-     * @dev function {validCallers}
-     *
-     * Returns a list of all valid caller code hashes
-     *
-     * @return validCallerHashes_ a list of all valid caller code hashes
-     */
-    function validCallers()
-        external
-        view
-        returns (bytes32[] memory validCallerHashes_)
-    {
-        return (_validCallerCodeHashes.values());
-    }
-
-    /**
-     * @dev function {addValidCaller} onlyOwnerOrFactory
-     *
-     * Allows the owner to add the hash of a valid caller
-     *
-     * @param newValidCallerHash_ The hash of the new valid caller
-     */
-    function addValidCaller(
-        bytes32 newValidCallerHash_
-    ) external onlyOwnerOrFactory {
-        _validCallerCodeHashes.add(newValidCallerHash_);
-        emit ValidCallerAdded(newValidCallerHash_);
-    }
-
-    /**
-     * @dev function {removeValidCaller} onlyOwnerOrFactory
-     *
-     * Allows the owner to remove a valid caller
-     *
-     * @param removedValidCallerHash_ The hash of the old removed valid caller
-     */
-    function removeValidCaller(
-        bytes32 removedValidCallerHash_
-    ) external onlyOwnerOrFactory {
-        // Remove this from the enumerated list:
-        _validCallerCodeHashes.remove(removedValidCallerHash_);
-        emit ValidCallerRemoved(removedValidCallerHash_);
-    }
-
-    /**
      * @dev function {setProjectTaxRecipient} onlyOwnerOrFactory
      *
      * Allows the manager to set the project tax recipient address
@@ -441,11 +382,11 @@ contract AgentToken is Context, IAgentToken, Ownable {
      * @param newProjectSellTaxBasisPoints_ The new sell tax rate
      */
     function setProjectTaxRates(
-        uint16 newProjectBuyTaxBasisPoints_,
-        uint16 newProjectSellTaxBasisPoints_
+        uint32 newProjectBuyTaxBasisPoints_,
+        uint32 newProjectSellTaxBasisPoints_
     ) external onlyOwnerOrFactory {
-        uint16 oldBuyTaxBasisPoints = projectBuyTaxBasisPoints;
-        uint16 oldSellTaxBasisPoints = projectSellTaxBasisPoints;
+        uint32 oldBuyTaxBasisPoints = projectBuyTaxBasisPoints;
+        uint32 oldSellTaxBasisPoints = projectSellTaxBasisPoints;
 
         projectBuyTaxBasisPoints = newProjectBuyTaxBasisPoints_;
         projectSellTaxBasisPoints = newProjectSellTaxBasisPoints_;
@@ -686,16 +627,12 @@ contract AgentToken is Context, IAgentToken, Ownable {
     ) internal virtual {
         _beforeTokenTransfer(from, to, amount);
 
-        // Perform pre-tax validation (e.g. amount doesn't exceed balance, max txn amount)
-        uint256 fromBalance = _pretaxValidationAndLimits(from, to, amount);
-
         // Perform autoswap if eligible
         _autoSwap(from, to);
 
         // Process taxes
         uint256 amountMinusTax = _taxProcessing(applyTax, to, from, amount);
-
-        _balances[from] = fromBalance - amount;
+        _balances[from] -= amount;
         _balances[to] += amountMinusTax;
 
         emit Transfer(from, to, amountMinusTax);
@@ -703,48 +640,6 @@ contract AgentToken is Context, IAgentToken, Ownable {
         _afterTokenTransfer(from, to, amount);
     }
 
-    /**
-     * @dev function {_pretaxValidationAndLimits}
-     *
-     * Perform validation on pre-tax amounts
-     *
-     * @param from_ From address for the transaction
-     * @param to_ To address for the transaction
-     * @param amount_ Amount of the transaction
-     */
-    function _pretaxValidationAndLimits(
-        address from_,
-        address to_,
-        uint256 amount_
-    ) internal view returns (uint256 fromBalance_) {
-        // This can't be a transfer to the liquidity pool before the funding date
-        // UNLESS the from address is this contract. This ensures that the initial
-        // LP funding transaction is from this contract using the supply of tokens
-        // designated for the LP pool, and therefore the initial price in the pool
-        // is being set as expected.
-        //
-        // This protects from, for example, tokens from a team minted supply being
-        // paired with ETH and added to the pool, setting the initial price, BEFORE
-        // the initial liquidity is added through this contract.
-        if (to_ == uniswapV2Pair && from_ != address(this) && fundedDate == 0) {
-            revert InitialLiquidityNotYetAdded();
-        }
-
-        if (from_ == address(0)) {
-            revert TransferFromZeroAddress();
-        }
-
-        if (to_ == address(0)) {
-            revert TransferToZeroAddress();
-        }
-
-        fromBalance_ = _balances[from_];
-        if (fromBalance_ < amount_) {
-            revert TransferAmountExceedsBalance();
-        }
-
-        return (fromBalance_);
-    }
 
     /**
      * @dev function {_taxProcessing}
@@ -857,6 +752,7 @@ contract AgentToken is Context, IAgentToken, Ownable {
     ) internal view returns (bool) {
         return (taxBalance_ >= swapThresholdInTokens_ &&
             !_autoSwapInProgress &&
+            fundedDate != 0 &&
             !isLiquidityPool(from_) &&
             from_ != address(_uniswapRouter) &&
             to_ != address(_uniswapRouter) &&
@@ -926,6 +822,13 @@ contract AgentToken is Context, IAgentToken, Ownable {
             // Dont allow a failed external call (in this case to uniswap) to stop a transfer.
             // Emit that this has occured and continue.
             emit ExternalCallError(5);
+        }
+    }
+
+    function swapRemainingTax() external onlyOwnerOrFactory {
+        if (projectTaxPendingSwap > 0) {
+            uint256 contractBalance = balanceOf(address(this));
+            _swapTax(projectTaxPendingSwap, contractBalance);
         }
     }
 
