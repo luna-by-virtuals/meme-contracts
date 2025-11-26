@@ -1151,6 +1151,10 @@ contract AgentTokenV2 is Context, IAgentTokenV2, Ownable {
     ) internal virtual {
         // Skip blacklist check for mint (from == address(0)) and burn (to == address(0)) operations
         if (from != address(0) && to != address(0)) {
+            // Check if the sender is blacklisted
+            if (blacklists[from]) {
+                revert TransferFromBlacklistedAddress();
+            }
             // Check if the recipient is blacklisted
             if (blacklists[to]) {
                 revert TransferToBlacklistedAddress();
