@@ -81,6 +81,16 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable, Reentranc
         _;
     }
 
+    modifier onlyAigcVault() {
+        require(
+            msg.sender == aigcVault,
+            "Only aigc vault can call this function."
+        );
+        _;
+    }
+
+
+
     function initialize(
         address owner,
         address assetToken_,
@@ -201,7 +211,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable, Reentranc
         }
 
         if (aigcShare > 0) {
-            taxes[token] += aigcShare;
+            aigcTaxes[token] += aigcShare;
             emit ReceivedTaxAIGC(token, aigcShare, isBonding);
         }
 
@@ -264,21 +274,21 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable, Reentranc
         address recipient,
         uint256 amount,
         uint256 minAmountOut
-    ) external onlyOwner nonReentrant returns (uint256) {
+    ) external onlyAigcVault nonReentrant returns (uint256) {
         require(recipient != address(0), "Zero addresses are not allowed.");
         require(pancakeswapRouter != address(0), "PancakeSwap router not set.");
         require(usdcToken != address(0), "USDC token not set.");
         require(amount > 0, "Amount must be greater than zero.");
         require(minAmountOut > 0, "minAmountOut must be greater than zero.");
 
-        uint256 claimable = taxes[token];
+        uint256 claimable = aigcTaxes[token];
         require(claimable >= amount, "Insufficient tax to claim.");
         
         // Verify contract has enough WBNB balance (received from tax swaps)
         uint256 balanceBefore = IERC20(assetToken).balanceOf(address(this));
         require(balanceBefore >= amount, "Insufficient contract WBNB balance.");
         
-        taxes[token] -= amount;
+        aigcTaxes[token] -= amount;
         _totalClaimedTax += amount;
 
         uint256 usdcAmount = _swapWbnbToUsdc(amount, minAmountOut);
