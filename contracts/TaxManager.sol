@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./ITaxManager.sol";
 import "./Launchpad.sol";
+import "./IErrors.sol";
 
 contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
@@ -270,6 +271,10 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
         address token_,
         uint256 amount_
     ) external onlyOwner {
+        if (token_ == assetToken) {
+            revert IErrors.CannotWithdrawAssetTokenError();
+        }
+
         IERC20(token_).safeTransfer(_msgSender(), amount_);
     }
 

@@ -55,4 +55,6 @@ interface IErrors {
   error TransferToBlacklistedAddress(); //                  Cannot transfer to a blacklisted address.
 
   error TransferFromBlacklistedAddress(); //                Cannot transfer from a blacklisted address.
+
+  error CannotWithdrawAssetTokenError(); //                 Cannot withdraw the asset token.
 }
