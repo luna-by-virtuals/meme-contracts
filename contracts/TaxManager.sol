@@ -262,12 +262,14 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable, Reentranc
     function claimTaxByToken(
         address token,
         address recipient,
-        uint256 amount
+        uint256 amount,
+        uint256 minAmountOut
     ) external onlyOwner nonReentrant returns (uint256) {
         require(recipient != address(0), "Zero addresses are not allowed.");
         require(pancakeswapRouter != address(0), "PancakeSwap router not set.");
         require(usdcToken != address(0), "USDC token not set.");
         require(amount > 0, "Amount must be greater than zero.");
+        require(minAmountOut > 0, "minAmountOut must be greater than zero.");
 
         uint256 claimable = taxes[token];
         require(claimable >= amount, "Insufficient tax to claim.");
@@ -279,7 +281,7 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable, Reentranc
         taxes[token] -= amount;
         _totalClaimedTax += amount;
 
-        uint256 usdcAmount = _swapWbnbToUsdc(amount);
+        uint256 usdcAmount = _swapWbnbToUsdc(amount, minAmountOut);
         
         uint256 balanceAfter = IERC20(assetToken).balanceOf(address(this));
         require(balanceAfter == balanceBefore - amount, "Balance mismatch detected.");
@@ -290,16 +292,12 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable, Reentranc
         return usdcAmount;
     }
 
-    function _swapWbnbToUsdc(uint256 wbnbAmount) internal returns (uint256) {
+    function _swapWbnbToUsdc(uint256 wbnbAmount, uint256 minAmountOut) internal returns (uint256) {
         IERC20(assetToken).forceApprove(pancakeswapRouter, wbnbAmount);
 
         address[] memory path = new address[](2);
         path[0] = assetToken; // WBNB
         path[1] = usdcToken; // USDC
-
-        uint256[] memory amountsOut = IUniswapV2Router02(pancakeswapRouter)
-            .getAmountsOut(wbnbAmount, path);
-        uint256 minAmountOut = (amountsOut[1] * 99) / 100; //1% slippage
 
         uint256[] memory amounts = IUniswapV2Router02(pancakeswapRouter)
             .swapExactTokensForTokens(
