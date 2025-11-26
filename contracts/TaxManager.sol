@@ -142,9 +142,6 @@ contract TaxManager is ITaxManager, Initializable, OwnableUpgradeable {
     }
 
     function _getAcpWallet(address token) internal returns (address) {
-        if (acpWallets[token] == address(0)) {
-            acpWallets[token] = launchpad.acpWallets(token);
-        }
         return acpWallets[token];
     }
 
